@@ -1,0 +1,133 @@
+{% extends 'www/main.html' %}
+{% block CONTENT %}
+    <div class="btn-group btn-group-sm">
+        {% if perms.ipam.add_prefix4 and object.size != 1 %}
+            <div class="btn-group btn-group-sm">
+                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                    <i class="fa fa-plus"></i>Add <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu" role="menu">
+                    <li><a href="{% url 'ipam.host4_add' vrf=object.vrf.name %}"><i
+                            class="fa fa-desktop"></i>Host</a></li>
+                    <li><a href="{% url 'ipam.prefix4_add' vrf=object.vrf.name %}"><i
+                            class="fa fa-sitemap"></i>Subnet</a></li>
+                </ul>
+            </div>
+        {% endif %}
+        {% if perms.ipam.edit_prefix4 %}
+            <a href="{{ object.get_update_url }}" class="btn btn-default"><i class="fa fa-edit"></i>Edit</a>
+        {% endif %}
+        <div class="btn-group btn-group-sm">
+            <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                <i class="fa fa-info-circle"></i>Reports <span class="caret"></span>
+            </button>
+            {% if object.size != 1 %}
+                <ul class="dropdown-menu" role="menu">
+                    <li><a href="{% url 'ipam.report_free4' %}?vrf={{ object.vrf.name }}&prefix={{ object.prefix }}"><i
+                            class="fa fa-recycle"></i>Free Blocks</a></li>
+                </ul>
+            {% endif %}
+        </div>
+        {% if perms.ipam.delete_prefix4 %}
+            <button type="button" class="btn btn-default" data-toggle="modal" data-target="#vrfDelete"><i
+                    class="fa fa-trash"></i>Delete
+            </button>
+        {% endif %}
+    </div>
+    {% if perms.ipam.delete_prefix4 %}
+        <div class="modal fade" id="vrfDelete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"><span
+                                aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                        <h4 class="modal-title" id="myModalLabel">
+                            Delete
+                            {% if object.size == 1 %}
+                                Host {{ object.ip }}
+                            {% else %}
+                                Network {{ object.prefix }}
+                            {% endif %}
+                        </h4>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure want to delete VRF <strong>
+                            {% if object.size == 1 %}
+                                host {{ object.ip }}
+                            {% else %}
+                                network {{ object.prefix }}
+                            {% endif %}
+                        </strong>?</p>
+
+                        <p class="text-danger"><strong>It can't be undone!</strong></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        <a href="{{ object.get_delete_url }}" class="btn btn-danger"><i
+                                class="fa fa-trash"></i>Delete</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    {% if object.size == 1 %}
+        <h2>Host Details</h2>
+        <dl class="dl-horizontal">
+            <dt>VRF table:</dt>
+            <dd><a href="{{ object.vrf.get_absolute_url }}">{{ object.vrf.name }}</a></dd>
+            {% if object.parent %}
+                <dt>Parent:</dt>
+                <dd><a href="{{ object.parent.get_absolute_url }}">{{ object.parent.prefix }}</a></dd>
+            {% endif %}
+            <dt>Description:</dt>
+            <dd>{{ object.description }}</dd>
+            <dt>FQDN:</dt>
+            <dd>{{ object.fqdn }}</dd>
+        </dl>
+    {% else %}
+        <h2>Network Details</h2>
+        <div class="row">
+            <div class="col-lg-5 col-md-6 col-sm-6 col-xs-6">
+
+                <dl class="dl-horizontal">
+                    <dt>VRF table:</dt>
+                    <dd><a href="{{ object.vrf.get_absolute_url }}">{{ object.vrf.name }}</a></dd>
+                    {% if object.parent %}
+                        <dt>Parent:</dt>
+                        <dd><a href="{{ object.parent.get_absolute_url }}">{{ object.parent.prefix }}</a></dd>
+                    {% endif %}
+                    <dt>Description:</dt>
+                    <dd>{{ object.description }}</dd>
+                    <dt>Number of networks:</dt>
+                    <dd>{{ object.networks_recursive.count|default:'&mdash;' }}</dd>
+                    <dt>Number of hosts:</dt>
+                    <dd>{{ object.hosts_recursive.count|default:'&mdash;' }}</dd>
+
+                    <dt>Domain name:</dt>
+                    <dd>{{ object.full_domain }}</dd>
+                    <dt>Host name:</dt>
+                    <dd>{{ object.host_name }}</dd>
+                </dl>
+            </div>
+            <div class="col-lg-5 col-md-6 col-sm-6 col-xs-6">
+                <dl class="dl-horizontal">
+                    <dt>Status:</dt>
+                    <dd>{{ object.get_status_display }}</dd>
+                    <dt>Total size:</dt>
+                    <dd>
+                        {{ object.size_total|default:'&mdash;' }}
+                    </dd>
+                    <dt>Allocated:</dt>
+                    <dd>{{ object.size_allocated|default:'&mdash;' }}</dd>
+                    <dt>Reserved:</dt>
+                    <dd>{{ object.size_reserved|default:'&mdash;' }}</dd>
+                    <dt>Free:</dt>
+                    <dd>{{ object.size_free|default:'&mdash;' }}</dd>
+                </dl>
+            </div>
+        </div>
+        {% include 'www/include/ipam-tables.html' %}
+    {% endif %}
+{% endblock %}

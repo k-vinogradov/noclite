@@ -1,0 +1,47 @@
+{% extends 'www/main.html' %}
+{% block CONTENT %}
+    {% include 'www/include/form.html' %}
+    {% if report %}
+        <hr>
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th>#</th>
+                <th>Prefix</th>
+                <th>Parent</th>
+                <th>Parent Domain</th>
+                <th>Parent Description</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for prefix in report %}
+                <tr>
+                    <td>{{ forloop.counter|default:'&mdash;' }}</td>
+                    <td>
+                        {% if perms.ipam.add_prefix4 %}
+                            <a href="{{ prefix.create_url }}"><i class="fa fa-plus"></i></a>
+                        {% endif %}
+                        {{ prefix.prefix|default:'&mdash;' }}
+                    </td>
+                    <td>{{ prefix.parent.prefix|default:'&mdash;' }}</td>
+                    <td>{{ prefix.parent.full_domain|default:'&mdash;' }}</td>
+                    <td>{{ prefix.parent.description|default:'&mdash;' }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+            <tfoot>
+            <tr>
+                <td colspan="5">
+                    <strong>Total {{ total }}
+                        {% if total > 1 %}
+                            prefixes are
+                        {% else %}
+                            prefix is
+                        {% endif %}
+                        free.</strong>
+                </td>
+            </tr>
+            </tfoot>
+        </table>
+    {% endif %}
+{% endblock %}
