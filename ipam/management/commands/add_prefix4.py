@@ -22,6 +22,10 @@ class Command(BaseCommand):
             vrf = Vrf.objects.get(name=options['vrf'])
         except Vrf.DoesNotExist:
             raise CommandError('VRF table "{0}" doesn\'t exist'.format(options['vrf']))
+        try:
+            d = unicode(options['description'])
+        except UnicodeDecodeError:
+            d = unicode(options['description'].decode('utf8'))
         p = Prefix4(prefix=options['prefix'], vrf=vrf, status=unicode(options['status']),
                     domain=unicode(options['domain']), host_name=unicode(options['hostname']),
                     description=unicode(options['description']))
