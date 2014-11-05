@@ -28,10 +28,10 @@ class Command(BaseCommand):
             d = unicode(options['description'].decode('utf8'))
         p = Prefix4(prefix=options['prefix'], vrf=vrf, status=unicode(options['status']),
                     domain=unicode(options['domain']), host_name=unicode(options['hostname']),
-                    description=unicode(options['description']))
+                    description=d)
         try:
             p.save()
         except ValidationError as e:
-            raise CommandError('. '.join(map(str,e.messages)))
+            raise CommandError('. '.join(map(str, e.messages)))
 
         self.stdout.write('{0} successful saved.'.format(p))
