@@ -23,7 +23,9 @@
                         {% endif %}
                         {{ prefix.prefix|default:'&mdash;' }}
                     </td>
-                    <td>{{ prefix.parent.prefix|default:'&mdash;' }}</td>
+                    <td>
+                        <a href="{{ prefix.parent.get_absolute_url }}">{{ prefix.parent.prefix|default:'&mdash;' }}</a>
+                    </td>
                     <td>{{ prefix.parent.full_domain|default:'&mdash;' }}</td>
                     <td>{{ prefix.parent.description|default:'&mdash;' }}</td>
                 </tr>

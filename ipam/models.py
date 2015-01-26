@@ -213,11 +213,15 @@ class Prefix4(models.Model):
         else:
             return self.parent.full_domain() if self.parent else ''
 
-    def fqdn(self):
+    def fqdn_list(self):
         if self.host_name:
-            return self.host_name if self.host_name[-1] == u'.' else (self.host_name + u'.' + self.full_domain())
+            return [name.strip() if name[-1] == u'.' else (name.strip() + u'.' + self.full_domain()) for name in
+                    self.host_name.split(u',')]
         else:
-            return self.full_domain()
+            return [self.full_domain(), ]
+
+    def fqdn(self):
+        return u', '.join(self.fqdn())
 
     def prefixes_lower(self, root_only=False, networks_only=False, hosts_only=False, statuses=None,
                        ignore_stored_values=False):
