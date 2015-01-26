@@ -221,7 +221,7 @@ class Prefix4(models.Model):
             return [self.full_domain(), ]
 
     def fqdn(self):
-        return u', '.join(self.fqdn())
+        return u', '.join(self.fqdn_list())
 
     def prefixes_lower(self, root_only=False, networks_only=False, hosts_only=False, statuses=None,
                        ignore_stored_values=False):
