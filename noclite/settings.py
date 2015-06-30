@@ -40,6 +40,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'www',
     'ipam',
+    'reports',
 )
 
 MIDDLEWARE_CLASSES = (
