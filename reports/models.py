@@ -41,6 +41,14 @@ class NACity(NamedModel, DeleteThroughIsActive):
         verbose_name_plural = u'cities'
 
 
+class NARegion(NamedModel, DeleteThroughIsActive):
+    cities = models.ManyToManyField('NACity', verbose_name=u'Cities')
+
+    class Meta(NamedModel):
+        verbose_name = u'region'
+        verbose_name_plural = u'regions'
+
+
 class NACategory(DeleteThroughIsActive):
     number = models.IntegerField(unique=True, verbose_name=u'Number')
     title = models.CharField(max_length=4, verbose_name=u'Caption')
@@ -102,8 +110,14 @@ class NAAccident(models.Model):
         return ', '.join([item.name for item in self.city.all()])
 
     def is_completed(self):
-        completed = True
-        return completed
+        if not (self.company and self.city and self.category and self.kind):
+            return False
+        elif not (self.start_datetime and self.finish_datetime and self.locations and self.affected_customers):
+            return False
+        elif not (self.reason and self.actions and self.iss_id):
+            return False
+        else:
+            return True
 
 
 class NADayType(NamedModel):
@@ -111,6 +125,7 @@ class NADayType(NamedModel):
     finish = models.TimeField(verbose_name=u'Finish', null=True, blank=True)
     default_workday = models.BooleanField(blank=True, default=False, verbose_name=u'Default workday')
     default_day_off = models.BooleanField(blank=True, default=False, verbose_name=u'Default day off')
+    region = models.ForeignKey('NARegion', null=True, blank=True, verbose_name=u'Region')
 
     class Meta(NamedModel.Meta):
         verbose_name = u'type of day'
