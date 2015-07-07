@@ -74,7 +74,8 @@ DATABASES = {
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'Asia/Krasnoyarsk'
+#TIME_ZONE = 'Asia/Krasnoyarsk'
+TIME_ZONE = 'Etc/GMT+7'
 
 USE_I18N = True
 
@@ -82,6 +83,7 @@ USE_L10N = True
 
 USE_TZ = True
 
+FORMAT_MODULE_PATH = 'noclite.formats'
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.7/howto/static-files/
@@ -120,7 +122,9 @@ DEFAULT_FROM_EMAIL = 'NOC Lite <nocl@sibir.ttk.ru>'
 SEARCH_MODULES = (
     'ipam.search',)
 NOCL_MODULES = (
-    'ipam',)
+    'ipam',
+    'reports',
+)
 
 # Modules settings
 
@@ -129,3 +133,7 @@ NOCL_MODULES = (
 IPAM_DEFAULT_DOMAIN = 'sibttk.net'
 
 STATICFILES_DIRS = [PROJECT_PATH + '/static']
+
+# REPORTS
+
+ISS_JOB_URL_TEMPLATE = 'http://10.6.3.7/departs/rcu/works/edit_work_mss.php?id={id}'

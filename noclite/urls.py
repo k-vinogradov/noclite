@@ -4,6 +4,8 @@ from django.contrib import admin
 
 import www.views as www
 import ipam.views as ipam
+import reports.views as reports
+import reports.accidents.views as reports_accidents
 
 urlpatterns = patterns(
     '',
@@ -73,4 +75,26 @@ urlpatterns = patterns(
     url(r'ipam/reports/free-blocks/$',
         permission_required(['ipam.view', ])(ipam.FreeBlocks4ReportView.as_view()),
         name='ipam.report_free4'),
+
+    # REPORTS MODULE
+    url(r'reports/$', permission_required(['reports.view', ])(reports.ReportsMainPage.as_view()), name='reports.home'),
+
+    # Accidents Report
+    url(r'reports/accidents/$', permission_required(['reports.view_na', ])(reports_accidents.AccidentsList.as_view()),
+        name='reports.accidents'),
+    url(r'reports/accidents/(?P<pk>\d+)$',
+        permission_required(['reports.view_na', ])(reports_accidents.AccidentDetailView.as_view()),
+        name='reports.accidents.detail'),
+    url(r'reports/accidents/(?P<pk>\d+)/update$',
+        permission_required(['reports.change_naccident', ])(reports_accidents.AccidentUpdateView.as_view()),
+        name='reports.accidents.update'),
+    url(r'reports/accidents/add/$',
+        permission_required(['reports.add_naccident', ])(reports_accidents.AccidentCreateView.as_view()),
+        name='reports.accidents.add'),
+    url(r'reports/accidents/(?P<pk>\d+)/delete$',
+        permission_required(['reports.delete_naccident', ])(reports_accidents.AccidentDeleteView.as_view()),
+        name='reports.accidents.delete'),
+
+    url(r'reports/accidents/cg/$', reports_accidents.CGReport.as_view())
+
 )

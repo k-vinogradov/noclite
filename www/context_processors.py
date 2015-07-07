@@ -18,23 +18,39 @@ def main_menu(request):
                 'menu': [
                     {
                         'icon': 'fa-cloud',
-                        'caption': 'VRF Tables',
+                        'caption': u'VRF Tables',
                         'url': reverse('ipam.vrf_list'),
                         'active': True if sub_module == 'vrf' else False
                     }, {
                         'icon': 'fa-globe',
-                        'caption': 'Domains Service',
+                        'caption': u'Domains Service',
                         'url': reverse('ipam.home'),
                         'active': True if sub_module == 'ipv4' else False
                     }, {
                         'icon': 'fa-info-circle',
-                        'caption': 'Reports',
+                        'caption': u'Reports',
                         'url': reverse('ipam.reports'),
                         'active': True if sub_module == 'reports' else False},
                 ]}
         else:
             context['main_menu'] = {
                 'module_title': 'IP Address Management',
+                'menu': [], }
+    elif module == 'reports':
+        if request.user.has_module_perms('reports'):
+            context['main_menu'] = {
+                'module_title': 'Reports',
+                'menu': [
+                    {
+                        'icon': 'fa-ambulance',
+                        'caption': u'Network Accidents',
+                        'url': reverse('reports.accidents'),
+                        'active': True if sub_module == 'accidents' else False},
+                ]
+            }
+        else:
+            context['main_menu'] = {
+                'module_title': 'Reports',
                 'menu': [], }
     else:
         context['main_menu'] = {
