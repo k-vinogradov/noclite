@@ -48,6 +48,11 @@ class DeleteThroughIsActiveManager(models.Manager):
             return self.filter(is_active=True)
 
 
+class ActiveAbleAcives(models.Manager):
+    def get_queryset(self):
+        return super(ActiveAbleAcives, self).get_queryset().filter(is_active=True)
+
+
 class ActiveAble(models.Model):
     is_active = models.BooleanField(default=True, blank=True, verbose_name=u'Active')
 
@@ -61,7 +66,6 @@ class ActiveAble(models.Model):
         self.is_active = False
         self.save()
 
-
-class ActiveAbleAcives(models.Manager):
-    def get_queryset(self):
-        return super(ActiveAbleAcives, self).get_queryset().filter(is_active=True)
+    @staticmethod
+    def limit_choice():
+        return {'is_active': True}

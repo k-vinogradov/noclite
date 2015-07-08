@@ -1,52 +1,42 @@
 {% extends 'www/main.html' %}
 {% load custom_tags_filters %}
 {% block CONTENT %}
-    <div class="row">
-        <div class="container-fluid">
-            <div class="col-xs-1 col-sm-1 col-md-1 col-lg-1">
-                <div class="btn-group" role="group" aria-label="...">
-                    <a href="{% url 'reports.accidents.add' %}" class="btn btn-default"><i class="fa fa-plus"></i>
-                        Add new accident</a>
-                </div>
-            </div>
-            <div class="col-xs-11 col-sm-11 col-md-11 col-lg-9 pull-right">
-                <form role="form" method="get" class="form-inline">
 
-                    <label for="{{ form.started.auto_id }}">From </label>
+    <form role="form" method="get" class="form-inline">
+        <div class="form-group">
+            <label for="{{ form.started.auto_id }}">From </label>
 
-                    <div class="form-group input-group date" id='datetimepicker1'>
-                        {{ form.started|addcss:"form-control" }}
-                        <span class="input-group-addon">
-                            <span class="glyphicon glyphicon-calendar"></span>
-                        </span>
-                    </div>
-                    <label for="{{ form.finished.auto_id }}">to </label>
-
-                    <div class="form-group input-group date" id='datetimepicker2'>
-                        {{ form.finished|addcss:"form-control" }}
-                        <span class="input-group-addon">
-                            <span class="glyphicon glyphicon-calendar"></span>
-                        </span>
-                    </div>
-                    <label for="{{ form.tz.auto_id }}">timezone </label>
-                    <div class="form-group input-group date" id='datetimepicker2'>
-                        {{ form.tz|addcss:"form-control" }}
-                    </div>
-                    <button type="submit" class="btn btn-default">Submit</button>
-                    <script type="text/javascript">
-                        $(function () {
-                            $('#datetimepicker1').datetimepicker({
-                                format: 'DD.MM.YYYY'
-                            });
-                            $('#datetimepicker2').datetimepicker({
-                                format: 'DD.MM.YYYY'
-                            });
-                        });
-                    </script>
-                </form>
+            <div class="input-group date" id='datetimepicker1'>
+                {{ form.started|addcss:"form-control input-sm" }}
+                <span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
             </div>
         </div>
-    </div>
+        <div class="form-group">
+            <label for="{{ form.finished.auto_id }}">to </label>
+
+            <div class="input-group date" id='datetimepicker2'>
+                {{ form.finished|addcss:"form-control input-sm" }}
+                <span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
+            </div>
+        </div>
+        <label for="{{ form.tz.auto_id }}">timezone </label>
+
+        <div class="form-group input-group">
+            {{ form.tz|addcss:"form-control input-sm" }}
+        </div>
+        <button type="submit" class="btn btn-default btn-sm">>></button>
+        <script type="text/javascript">
+            $(function () {
+                $('#datetimepicker1').datetimepicker({
+                    format: 'DD.MM.YYYY'
+                });
+                $('#datetimepicker2').datetimepicker({
+                    format: 'DD.MM.YYYY'
+                });
+            });
+        </script>
+    </form>
+
     <hr/>
     {% if error %}
         <h3 class="text-center text-danger">{{ error }}</h3>
@@ -62,6 +52,9 @@
             <dt>Total accidents:</dt>
             <dd>{{ list_properties.count }}</dd>
         </dl>
+        <a href="{% url 'reports.accidents.add' %}" class="btn btn-default btn-sm"><i
+                class="fa fa-plus"></i>
+            New accident</a>
         <table class="table table-hover">
             <thead>
             <tr>
@@ -102,7 +95,6 @@
                         {% endif %}
                     </td>
                     <td>{{ accident.reason }}</td>
-                    </th>
                 </tr>
             {% endfor %}
 

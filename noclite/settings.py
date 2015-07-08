@@ -74,8 +74,7 @@ DATABASES = {
 
 LANGUAGE_CODE = 'en-us'
 
-#TIME_ZONE = 'Asia/Krasnoyarsk'
-TIME_ZONE = 'Etc/GMT+7'
+TIME_ZONE = 'Etc/GMT-7'
 
 USE_I18N = True
 

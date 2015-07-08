@@ -3,6 +3,7 @@ from reports.accidents.forms import *
 from reports.models import NAAccident, NAUserProfile, NAConsolidationGroup
 from django.utils import timezone
 from django.core.urlresolvers import reverse_lazy
+from django.shortcuts import redirect
 import re
 import pytz
 from datetime import datetime, time, date
@@ -141,13 +142,33 @@ class AccidentDeleteView(DeleteView):
         return self.post(*args, **kwargs)
 
 
-class CGReport(TemplateView):
+class CGReport(FormView):
     template_name = 'www/reports/accidents/cg.html'
+    form_class = ConsolidationReportForm
+    success_url = reverse_lazy('reports.accidents.cg')
 
     def get_context_data(self, **kwargs):
         context = super(CGReport, self).get_context_data(**kwargs)
-        d1 = datetime(2015, 5, 31, 0, 0, 0, tzinfo=timezone.get_default_timezone())
-        d2 = datetime(2015, 6, 30, 23, 59, 59, tzinfo=timezone.get_default_timezone())
-        context['list_properties'] = {'timezone': timezone.get_default_timezone()}
-        context['report'] = [obj.report(d1, d2) for obj in NAConsolidationGroup.objects.all()]
+        if 'start' in self.request.GET and 'finish' in self.request.GET and 'tz' in self.request.GET:
+            tz = pytz.timezone(self.request.GET['tz'])
+            context['list_properties'] = {'timezone': tz}
+            d1 = datetime.strptime(self.request.GET['start'], '%Y-%m-%d %H:%M:%S').replace(tzinfo=tz)
+            d2 = datetime.strptime(self.request.GET['finish'], '%Y-%m-%d %H:%M:%S').replace(tzinfo=tz)
+            context['report'] = [obj.report(d1, d2) for obj in NAConsolidationGroup.objects.all()]
         return context
+
+    def get_initial(self):
+        initials = super(CGReport, self).get_initial()
+        if self.request.method == 'GET':
+            if 'start' in self.request.GET and 'finish' in self.request.GET and 'tz' in self.request.GET:
+                initials['start'] = datetime.strptime(self.request.GET['start'], '%Y-%m-%d %H:%M:%S')
+                initials['finish'] = datetime.strptime(self.request.GET['finish'], '%Y-%m-%d %H:%M:%S')
+                initials['tz'] = self.request.GET['tz']
+        return initials
+
+    def form_valid(self, form):
+        from django.utils.http import urlquote
+
+        data = form.clean()
+        return redirect(
+            '{0}?{1}'.format(self.success_url, '&'.join(['{0}={1}'.format(k, urlquote(data[k])) for k in data])))
