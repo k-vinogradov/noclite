@@ -105,7 +105,7 @@ class NAAccident(models.Model, JournalMixin):
     reason = models.TextField(blank=True, null=True, verbose_name=u'Cause of accident')
     actions = models.TextField(blank=True, null=True, verbose_name=u'Emergency actions')
     iss_id = models.IntegerField(blank=True, null=True, verbose_name=u'ISS emergency job\'s number')
-    consolidation_report_ignore_cause = models.TextField(blank=True, null=True, default=u'',
+    consolidation_report_ignore_cause = models.TextField(blank=True, default=u'',
                                                          verbose_name=u'Cause of ignoring accident in the consolidation'
                                                                       u' report')
 
@@ -413,7 +413,7 @@ class NAConsolidationGroup(NamedModel):
     class Meta(NamedModel.Meta):
         verbose_name = u'consolidation groups'
         verbose_name_plural = u'consolidation groups'
-        permissions = ('view_cg', "Can view accidents consolidation report")
+        permissions = (('view_cg', "Can view accidents consolidation report"),)
 
     def cities(self):
         return NACity.objects.filter(naregion__in=self.regions.all())
