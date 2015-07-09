@@ -5,8 +5,7 @@ from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
-
-from www.contrib import NamedModel, ActiveAble
+from www.contrib import NamedModel, ActiveAble, JournalMixin
 
 NA_SCHEDULE_WH = 'WH'
 NA_SCHEDULE_24H = '24'
@@ -88,7 +87,7 @@ class NAKind(ActiveAble):
         return u'{0}. {1}'.format(self.code, self.title) if self.id else u'New Kind of Accident'
 
 
-class NAAccident(models.Model):
+class NAAccident(models.Model, JournalMixin):
     companies = models.ManyToManyField('NACompany', null=True, blank=True, verbose_name=u'Company',
                                        limit_choices_to=ActiveAble.limit_choice())
     cities = models.ManyToManyField('NACity', null=True, blank=True, verbose_name=u'City',
@@ -106,7 +105,7 @@ class NAAccident(models.Model):
     reason = models.TextField(blank=True, null=True, verbose_name=u'Cause of accident')
     actions = models.TextField(blank=True, null=True, verbose_name=u'Emergency actions')
     iss_id = models.IntegerField(blank=True, null=True, verbose_name=u'ISS emergency job\'s number')
-    consolidation_report_ignore_cause = models.TextField(blank=True, null=True,
+    consolidation_report_ignore_cause = models.TextField(blank=True, null=True, default=u'',
                                                          verbose_name=u'Cause of ignoring accident in the consolidation'
                                                                       u' report')
 
@@ -116,7 +115,7 @@ class NAAccident(models.Model):
         verbose_name_plural = u'accidents'
         permissions = (
             ('view', 'Can view network accidents'),
-            ('view_na', 'Can view network accidents info')
+            ('view_na', 'Can view network accidents info'),
         )
 
     def __unicode__(self):
@@ -132,8 +131,10 @@ class NAAccident(models.Model):
             if self.finish_datetime < self.start_datetime:
                 raise ValidationError(u'The accident can\'t be finished earlier thant it was started.')
 
-    def save(self, user=None, *args, **kwargs):
-        super(NAAccident, self).save(*args, **kwargs)
+    def journal(self):
+        from www.models import Journal
+
+        return Journal.objects.by_objects(self)
 
     def get_absolute_url(self):
         return reverse('reports.accidents.detail', kwargs={'pk': self.id}) if self.id else None
@@ -196,7 +197,8 @@ class NAAccident(models.Model):
         day = timedelta(days=1)
         tz = timezone.get_default_timezone()
         current_datetime = self.start_datetime.astimezone(tz)
-        while current_datetime < self.finish_datetime.astimezone(tz):
+        finish_datetime = self.finish_datetime.astimezone(tz)
+        while current_datetime < finish_datetime:
             current_date = current_datetime.date()
             for r in rl:
                 try:
@@ -223,8 +225,8 @@ class NAAccident(models.Model):
                 if type_of_day.start and type_of_day.finish:
                     t_1 = current_datetime.time() if current_datetime.time() > type_of_day.start else type_of_day.start
 
-                    if current_datetime.date() == self.finish_datetime.date():
-                        end_of_accident = self.finish_datetime.astimezone(tz).time()
+                    if current_datetime.date() == finish_datetime.date():
+                        end_of_accident = finish_datetime.time()
                     else:
                         end_of_accident = time(23, 59, 59)
                     t_2 = end_of_accident if end_of_accident < type_of_day.finish else type_of_day.finish
@@ -284,7 +286,7 @@ class NAAccident(models.Model):
         if self.duration_max() > time_limit:
             return self.duration_max() - time_limit
         else:
-            0
+            return 0
 
     def overtime_str(self):
         return timedelta(minutes=self.overtime()).__str__()[:-3]
@@ -396,8 +398,10 @@ class NAKindCategoryMap(models.Model):
                                         limit_choices_to=ActiveAble.limit_choice())
     consolidation_group = models.ForeignKey('NAConsolidationGroup')
 
-    def accidents(self):
-        return NAAccident.objects.filter(kind__in=self.kinds.all(), category__in=self.categories.all()).distinct()
+    def accidents(self, **kwargs):
+        kwargs['kind__in'] = self.kinds.all()
+        kwargs['category__in'] = self.categories.all()
+        return NAAccident.objects.filter(**kwargs).distinct()
 
 
 class NAConsolidationGroup(NamedModel):
@@ -409,19 +413,21 @@ class NAConsolidationGroup(NamedModel):
     class Meta(NamedModel.Meta):
         verbose_name = u'consolidation groups'
         verbose_name_plural = u'consolidation groups'
+        permissions = ('view_cg', "Can view accidents consolidation report")
 
     def cities(self):
         return NACity.objects.filter(naregion__in=self.regions.all())
 
     def accidents(self, started=None, finished=None):
-        params = {'cities__in': self.cities(), 'companies__in': self.companies.all(),}
+        params = {'cities__in': self.cities(), 'companies__in': self.companies.all(),
+                  'consolidation_report_ignore_cause': u''}
         if started:
             params['start_datetime__gte'] = started
         if finished:
             params['start_datetime__lte'] = finished
         accidents_id = []
         for cmap in self.nakindcategorymap_set.all():
-            accidents_id += [a.id for a in cmap.accidents() if a.is_completed()]
+            accidents_id += [a.id for a in cmap.accidents(**params) if a.is_completed()]
         params['id__in'] = accidents_id
         return NAAccident.objects.filter(**params).distinct()
 

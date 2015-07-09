@@ -1,5 +1,7 @@
 from django.db import models
 from django.shortcuts import redirect
+from django.utils.timezone import get_default_timezone
+from www.constatnts import JL_INFO
 
 
 class AddUserInstanceViewMixin(object):
@@ -69,3 +71,68 @@ class ActiveAble(models.Model):
     @staticmethod
     def limit_choice():
         return {'is_active': True}
+
+
+class JournalMixin(object):
+    def write_to_journal(self, user, message, level=JL_INFO):
+        from www.models import Journal
+
+        Journal.objects.create(level=JL_INFO, message=message, objects=[self, user])
+
+    def journal_changes(self, user, p_instance=None):
+        model_class = self.__class__
+        meta = model_class._meta
+        if p_instance:
+            message = u'User {full_name} ({email}) updated {verbose_name}.'.format(
+                full_name=' '.join((user.first_name, user.last_name)),
+                email=user.email,
+                verbose_name=meta.verbose_name)
+            for field in meta.fields:
+                if getattr(self, field.name):
+                    verbose_name = field._verbose_name
+                    if field.__class__.__name__ == 'DateTimeField':
+                        value = unicode(getattr(self, field.name).astimezone(get_default_timezone()))
+                        p_value = unicode(getattr(p_instance, field.name).astimezone(get_default_timezone()))
+                    else:
+                        value = unicode(getattr(self, field.name))
+                        p_value = unicode(getattr(p_instance, field.name))
+                    if value != p_value:
+                        message += u'\n{0}: {1}'.format(verbose_name, value)
+            for field in meta._many_to_many():
+                if getattr(self, field.name).count() > 1:
+                    verbose_name = field._verbose_name
+                    new_list = getattr(self, field.name).all()
+                    old_list = getattr(p_instance, field.name).all()
+                    added = [unicode(item) for item in new_list if item not in old_list]
+                    removed = [unicode(item) for item in old_list if item not in new_list]
+                    if len(added) > 0:
+                        message += u'\n{0} (added): {1}'.format(verbose_name, u','.join(added))
+                    if len(added) > 0:
+                        message += u'\n{0} (removed): {1}'.format(verbose_name, u','.join(removed))
+        else:
+            message = u'User {full_name} ({email}) added new {verbose_name}.'.format(
+                full_name=' '.join((user.first_name, user.last_name)),
+                email=user.email,
+                verbose_name=meta.verbose_name)
+            for field in meta.fields:
+                if getattr(self, field.name):
+                    verbose_name = field._verbose_name
+                    value = unicode(getattr(self, field.name))
+                    message += u'\n{0}: {1}'.format(verbose_name, value)
+            for field in meta._many_to_many():
+                if getattr(self, field.name).count() > 1:
+                    verbose_name = field._verbose_name
+                    value = ', '.join([unicode(v) for v in getattr(self, field.name).all()])
+                    message += u'\n{0}: {1}'.format(verbose_name, value)
+        self.write_to_journal(user, message)
+
+
+class JournalViewMixin(object):
+    def form_valid(self, form):
+        if 'pk' in self.kwargs or 'slug' in self.kwargs:
+            p_instance = self.get_object()
+        else:
+            p_instance = None
+        instance = form.save()
+        instance.journal_changes(self.request.user, p_instance=p_instance)
+        return redirect(self.get_success_url() if self.success_url else instance.get_absolute_url())

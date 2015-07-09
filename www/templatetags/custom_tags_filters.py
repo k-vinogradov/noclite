@@ -74,3 +74,7 @@ def percent(value, arg=None):
         except:
             pass
     return ''
+
+@register.filter
+def paragraphs(value):
+    return mark_safe(u'<br/>'.join(value.split(u'\n')))

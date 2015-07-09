@@ -73,5 +73,26 @@
                 <a href="{{ accident.iss_id|iss_job_url }}">{{ accident.iss_id }}</a>
             {% endif %}
         </dd>
+        {% if accident.consolidation_report_ignore_cause %}
+            <dt>Ignore accident:</dt>
+            <dd>{{ accident.consolidation_report_ignore_cause }}</dd>
+        {% endif %}
     </dl>
+    <h2>Journal</h2>
+    <table class="table table-hover">
+        <thead>
+        <tr>
+            <th>Date and Time</th>
+            <th>Message</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for record in object.journal %}
+            <tr>
+                <td>{{ record.date_time }}</td>
+                <td>{{ record.message|paragraphs }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
 {% endblock %}

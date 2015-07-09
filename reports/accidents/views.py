@@ -8,7 +8,7 @@ import re
 import pytz
 from datetime import datetime, time, date
 from calendar import monthrange
-from www.contrib import AdditionalContextViewMixin
+from www.contrib import AdditionalContextViewMixin, JournalViewMixin
 
 LIST_INTERVAL = 'reports_accidents_list_interval'
 
@@ -80,7 +80,7 @@ class AccidentsList(FormView):
         if error:
             context['error'] = error
         else:
-            context['list'] = NAAccident.objects.filter(start_datetime__gte=started, start_datetime__lte=finished)
+            context['list'] = NAAccident.objects.filter(start_datetime__range=(started, finished))
             context['list_properties'] = {'started': started, 'finished': finished, 'count': context['list'].count(),
                                           'timezone': tz}
             NAUserProfile.objects.update_or_create(
@@ -117,18 +117,13 @@ class AccidentDetailView(DetailView):
         return context
 
 
-class AccidentUpdateView(UpdateView):
+class AccidentUpdateView(AdditionalContextViewMixin, JournalViewMixin, UpdateView):
     model = NAAccident
     template_name = 'www/form.html'
-
-    def get_context_data(self, **kwargs):
-        context = super(AccidentUpdateView, self).get_context_data(**kwargs)
-        accident = self.get_object()
-        context['page_title'] = u'Update Accident #{0}'.format(accident.id)
-        return context
+    page_title = u'Update Accident'
 
 
-class AccidentCreateView(CreateView, AdditionalContextViewMixin):
+class AccidentCreateView(AdditionalContextViewMixin, JournalViewMixin, CreateView):
     model = NAAccident
     template_name = 'www/form.html'
     page_title = u'Add Network Accident'
