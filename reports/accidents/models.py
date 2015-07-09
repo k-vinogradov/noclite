@@ -301,8 +301,16 @@ class NADayType(NamedModel):
                                limit_choices_to=ActiveAble.limit_choice())
 
     class Meta(NamedModel.Meta):
-        verbose_name = u'type of day'
-        verbose_name_plural = u'types of day'
+        verbose_name = u'type of a day'
+        verbose_name_plural = u'types of a day'
+
+    def default_settings(self):
+        if self.default_workday:
+            return 'Default workday'
+        elif self.default_day_off:
+            return 'Default day off'
+        else:
+            return ''
 
 
 class NADay(models.Model):
@@ -317,7 +325,7 @@ class NADay(models.Model):
         verbose_name_plural = u'days'
 
     def __unicode__(self):
-        return self.date.__str__() if self.id else u'New Day'
+        return self.date.strftime('%d.%m.%Y') if self.id else u'New Day'
 
 
 class NAWorkHours(models.Model):
