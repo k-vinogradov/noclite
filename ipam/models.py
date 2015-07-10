@@ -130,7 +130,7 @@ class Vrf(models.Model):
             if self.id:
                 p = Vrf.objects.get(id=self.id)
                 message = u'User {0} ({1}) modified VRF {2}'.format(user.profile.get_short_name(), user.email,
-                                                                    self.name)
+                    self.name)
                 if p.name != self.name:
                     message += u' New name: "{0}".'.format(self.name)
                 if p.rd != self.rd:
@@ -139,7 +139,7 @@ class Vrf(models.Model):
                     message += u' New description: "{0}"'.format(self.description)
             else:
                 message = u'User {0} ({1}) create VRF table {2}'.format(user.profile.get_short_name(), user.email,
-                                                                        self.name)
+                    self.name)
         super(Vrf, self).save(*args, **kwargs)
         if message and user:
             from www.models import Journal
@@ -430,3 +430,90 @@ class Prefix4(models.Model):
         super(Prefix4, self).delete(using=using)
         for p_id in child_prefix_ids:
             Prefix4.objects.get(id=p_id).save()
+
+    @staticmethod
+    def get_by_ip(vrf, ip):
+        from ipcalc import IP
+
+        if type(ip) in [unicode, str]:
+            ip = IP(ip).ip
+        if type(ip) in [Network, IP]:
+            ip = ip.ip
+        prefix = vrf.prefixes(statuses=[STATUS_ALLOCATED, STATUS_ASSIGNED]).filter(first_ip_dec__lte=ip,
+                                                                                   last_ip_dec__gte=ip).last()
+        return prefix
+
+
+class Domain4(models.Model):
+    zone_types = (
+        ('in', 'IN'),)
+
+    zone = models.CharField(max_length=255, verbose_name=u'Zone FQDN', unique=True)
+    ttl = models.CharField(max_length=8, verbose_name=u'Time-to-Live')
+    zone_type = models.CharField(max_length=4, choices=zone_types, verbose_name=u'Type')
+    soa_name_server = models.CharField(max_length=255, verbose_name=u'Name server')
+    soa_admin_mailbox = models.CharField(max_length=255, verbose_name=u'Admin mailbox')
+    sn = models.IntegerField(verbose_name=u'Serial number')
+    refresh = models.CharField(max_length=8, verbose_name=u'Refresh')
+    retry = models.CharField(max_length=8, verbose_name=u'Retry')
+    expiry = models.CharField(max_length=8, verbose_name=u'Expiry')
+    nx = models.CharField(max_length=8, verbose_name=u'NXDomain TTL')
+    name_servers = models.TextField(verbose_name=u'NS resource records')
+    vrf = models.ForeignKey('Vrf', verbose_name=u'VRF')
+    first_ip = models.IPAddressField(verbose_name=u'First IP address')
+    last_ip = models.IPAddressField(verbose_name=u'Last IP address')
+    control_hash = models.CharField(max_length=255, blank=True, default='')
+
+    class Meta:
+        verbose_name = u'domain'
+        verbose_name_plural = u'domains'
+
+    def __unicode__(self):
+        if self.id:
+            return unicode(self.zone)
+        else:
+            return u'New Domain'
+
+    def clean(self):
+        from ipcalc import IP
+
+        super(Domain4, self).clean()
+        if IP(self.last_ip).ip > IP(self.first_ip).ip:
+            ValidationError(u'Last IP address can\' be lower than first IP address.')
+
+    def serial_number(self):
+        from hashlib import sha256
+
+        control_string = u' '.join([
+            self.zone,
+            self.ttl,
+            self.zone_type,
+            self.soa_name_server,
+            self.soa_admin_mailbox,
+            self.refresh,
+            self.retry,
+            self.expiry,
+            self.nx,
+            self.name_servers,
+            u' '.join(['{fqdn} {value}'.format(**rr) for rr in self.ptr_list()])
+        ])
+        new_hash = sha256(control_string).hexdigest()
+        if self.control_hash != new_hash:
+            self.sn += 1
+            self.control_hash = new_hash
+            self.save()
+        return self.sn
+
+    def ptr_list(self):
+        from ipcalc import IP
+
+        f_dec = IP(self.first_ip).ip
+        l_dec = IP(self.last_ip).ip
+        dec = f_dec
+        result = []
+        while dec <= l_dec:
+            result.append({
+                'fqdn': IP(dec).to_reverse() + '.',
+                'value': Prefix4.get_by_ip(self.vrf, dec).fqdn()})
+            dec += 1
+        return result

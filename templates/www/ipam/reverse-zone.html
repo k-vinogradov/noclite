@@ -1,0 +1,23 @@
+$TTL {{ object.ttl }}
+@ {{ object.zone_type }} SOA {{ object.soa_name_server }}. {{ object.soa_admin_mailbox }}. ({{ object.serial_number }} {{ object.refresh }} {{ object.retry }} {{ object.expiry }} {{ object.nx }})
+
+{{ object.name_servers }}
+
+{% for rr in object.ptr_list %}
+{{ rr.fqdn }} PTR  {{ rr.value }}{% endfor %}
+
+{% comment %}
+$TTL	{{ object.ttl }}
+@				{{ object.zone_type }}		SOA		{{ object.soa_name_server }}. {{ object.soa_admin_mailbox }}. (
+									{{ object.sn }}
+									{{ object.refresh }}
+									{{ object.retry }}
+                                    {{ object.expiry }}
+									{{ object.nx }}
+								)
+
+{{ object.name_servers }}
+
+{% for rr in object.ptr_list %}
+{{ rr.fqdn }}						PTR		{{ rr.value }}{% endfor %}
+{% endcomment %}
