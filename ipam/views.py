@@ -1,6 +1,7 @@
 from ipcalc import Network, IP
 
 from django.views.generic import DetailView, ListView, CreateView, UpdateView, DeleteView, FormView, TemplateView
+from django.views.generic.base import TemplateResponseMixin
 from django.core.urlresolvers import reverse_lazy
 from django.shortcuts import redirect
 from ipam.models import Vrf, Prefix4, Domain4
@@ -261,11 +262,18 @@ class ReportsView(TemplateView):
         return context
 
 
-class Domain4ZoneView(TemplateView):
+class Domain4ZoneView(TemplateView, TemplateResponseMixin):
     template_name = 'www/ipam/reverse-zone.html'
+    content_type = 'application/octet-stream'
 
     def get_context_data(self, **kwargs):
         context = super(Domain4ZoneView, self).get_context_data(**kwargs)
         if 'zone' in self.request.GET:
             context['object'] = Domain4.objects.get(zone=self.request.GET['zone'])
         return context
+
+    def render_to_response(self, context, **response_kwargs):
+        response = super(Domain4ZoneView, self).render_to_response(context, **response_kwargs)
+        response['Content-Disposition'] = 'attachment; filename={0}'.format(self.request.GET['zone'])
+        return response
+
