@@ -75,6 +75,10 @@
                 <dd>{{ object.rd }}</dd>
                 <dt>Description:</dt>
                 <dd>{{ object.description }}</dd>
+                {% if object.parent %}
+                    <dt>Parent</dt>
+                    <dd>{{ object.parent }}</dd>
+                {% endif %}
                 <dt>Number of networks:</dt>
                 <dd>{{ object.networks.count|default:'&mdash;' }}</dd>
                 <dt>Number of hosts:</dt>

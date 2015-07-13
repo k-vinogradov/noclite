@@ -24,6 +24,7 @@ class Vrf(models.Model):
     rd = models.CharField(max_length=16, verbose_name=u'route-distinguisher', unique=True,
                           help_text=u'Route Distinguisher')
     description = models.TextField(verbose_name=u'description', blank=True)
+    parent = models.ForeignKey('self', null=True, blank=True, verbose_name=u'Parent VRF')
 
     class Meta:
         ordering = ['name', ]
@@ -39,7 +40,24 @@ class Vrf(models.Model):
     def __unicode__(self):
         return unicode(self.__str__())
 
-    def prefixes(self, root_only=False, networks_only=False, hosts_only=False, statuses=None, subnet=None):
+    def recursive_children(self):
+        def recursive_list(vrf):
+            """
+            Return children VRFs
+            :param vrf: current VRF
+            :type vrf: Vrf
+            :return:
+            """
+            result = []
+            for v in vrf.vrf_set.all():
+                result += recursive_list(v)
+            result.append(vrf)
+            return result
+
+        return recursive_list(self)
+
+    def prefixes(self, root_only=False, networks_only=False, hosts_only=False, statuses=None, subnet=None,
+                 recursion=False):
         """
         Return QuerySet with VRF's prefixes
         :param root_only: return top-level's prefixes only
@@ -50,9 +68,12 @@ class Vrf(models.Model):
         :type hosts_only: bool
         :param statuses: statuses list for filter
         :type statuses: list
+        :param recursion: Include children VRFs
+        :type recursion: bool
         :return: QuerySet
         :rtype: django.db.models.QuerySet
         """
+
         args = {}
         if statuses:
             args['status__in'] = statuses
@@ -66,7 +87,11 @@ class Vrf(models.Model):
             network = Network(subnet)
             args['first_ip_dec__gte'] = network.ip
             args['last_ip_dec__lte'] = network.broadcast_long()
-        return self.prefixes_list if len(args) == 0 else self.prefixes_list.filter(**args)
+        if recursion:
+            args['vrf__in'] = self.recursive_children()
+            return Prefix4.objects.filter(**args)
+        else:
+            return self.prefixes_list if len(args) == 0 else self.prefixes_list.filter(**args)
 
     def networks(self):
         return self.prefixes(networks_only=True)
@@ -439,8 +464,8 @@ class Prefix4(models.Model):
             ip = IP(ip).ip
         if type(ip) in [Network, IP]:
             ip = ip.ip
-        prefix = vrf.prefixes(statuses=[STATUS_ALLOCATED, STATUS_ASSIGNED]).filter(first_ip_dec__lte=ip,
-                                                                                   last_ip_dec__gte=ip).last()
+        prefix = vrf.prefixes(statuses=[STATUS_ALLOCATED, STATUS_ASSIGNED],
+                              recursion=True).filter(first_ip_dec__lte=ip, last_ip_dec__gte=ip).last()
         return prefix
 
 
