@@ -276,4 +276,3 @@ class Domain4ZoneView(TemplateView, TemplateResponseMixin):
         response = super(Domain4ZoneView, self).render_to_response(context, **response_kwargs)
         response['Content-Disposition'] = 'attachment; filename={0}'.format(self.request.GET['zone'])
         return response
-

@@ -8,6 +8,8 @@ from ipcalc import Network
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
+from datetime import datetime
+from django.utils.timezone import get_default_timezone
 
 STATUS_ALLOCATED = u'allocated'
 STATUS_ASSIGNED = u'assigned'
@@ -469,25 +471,35 @@ class Prefix4(models.Model):
         return prefix
 
 
+def datetime_now():
+    return datetime.now(tz=get_default_timezone())
+
+
+def datetime_now_str():
+    return datetime_now().strftime('%Y%m%d%H%M%S')
+
+
 class Domain4(models.Model):
     zone_types = (
         ('in', 'IN'),)
 
-    zone = models.CharField(max_length=255, verbose_name=u'Zone FQDN', unique=True)
-    ttl = models.CharField(max_length=8, verbose_name=u'Time-to-Live')
-    zone_type = models.CharField(max_length=4, choices=zone_types, verbose_name=u'Type')
-    soa_name_server = models.CharField(max_length=255, verbose_name=u'Name server')
-    soa_admin_mailbox = models.CharField(max_length=255, verbose_name=u'Admin mailbox')
-    sn = models.IntegerField(verbose_name=u'Serial number')
-    refresh = models.CharField(max_length=8, verbose_name=u'Refresh')
-    retry = models.CharField(max_length=8, verbose_name=u'Retry')
-    expiry = models.CharField(max_length=8, verbose_name=u'Expiry')
-    nx = models.CharField(max_length=8, verbose_name=u'NXDomain TTL')
-    name_servers = models.TextField(verbose_name=u'NS resource records')
+    zone = models.CharField(max_length=255, verbose_name=u'Zone FQDN', unique=True, help_text='Without finel dot.')
+    ttl = models.CharField(max_length=8, default='30m', verbose_name=u'Time-to-Live')
+    zone_type = models.CharField(max_length=4, choices=zone_types, default='in', verbose_name=u'Type')
+    soa_name_server = models.CharField(max_length=255, default=u'ns.sibttk.net', verbose_name=u'Name server')
+    soa_admin_mailbox = models.CharField(max_length=255, default=u'root.sibttk.net', verbose_name=u'Admin mailbox')
+    sn = models.IntegerField(default=datetime_now_str, verbose_name=u'Serial number')
+    refresh = models.CharField(max_length=8, default=u'20m', verbose_name=u'Refresh')
+    retry = models.CharField(max_length=8, default=u'2m', verbose_name=u'Retry')
+    expiry = models.CharField(max_length=8, default=u'2w', verbose_name=u'Expiry')
+    nx = models.CharField(max_length=8, default=u'5m', verbose_name=u'NXDomain TTL')
+    name_servers = models.TextField(default=u'@ IN NS ns.sibttk.net.\n@ IN NS ns2.sibttk.net.',
+                                    verbose_name=u'NS resource records')
     vrf = models.ForeignKey('Vrf', verbose_name=u'VRF')
     first_ip = models.IPAddressField(verbose_name=u'First IP address')
     last_ip = models.IPAddressField(verbose_name=u'Last IP address')
     control_hash = models.CharField(max_length=255, blank=True, default='')
+    last_updated = models.DateTimeField(default=datetime_now)
 
     class Meta:
         verbose_name = u'domain'
@@ -526,6 +538,7 @@ class Domain4(models.Model):
         if self.control_hash != new_hash:
             self.sn += 1
             self.control_hash = new_hash
+            self.last_updated = datetime.now(tz=get_default_timezone())
             self.save()
         return self.sn
 

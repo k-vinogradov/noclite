@@ -18,7 +18,7 @@ class PrefixAdmin(admin.ModelAdmin):
 @admin.register(Domain4)
 class Domain4Admin(admin.ModelAdmin):
     list_display = ['zone', 'sn']
-    exclude = ['control_hash']
+    exclude = ['control_hash', 'last_updated']
 
 
 admin.site.register(Vrf)
