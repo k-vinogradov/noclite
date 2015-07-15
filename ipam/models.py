@@ -550,8 +550,9 @@ class Domain4(models.Model):
         dec = f_dec
         result = []
         while dec <= l_dec:
-            result.append({
-                'fqdn': IP(dec).to_reverse() + '.',
-                'value': Prefix4.get_by_ip(self.vrf, dec).fqdn()})
+            for value in Prefix4.get_by_ip(self.vrf, dec).fqdn_list():
+                result.append({
+                    'fqdn': IP(dec).to_reverse() + '.',
+                    'value': value})
             dec += 1
         return result
