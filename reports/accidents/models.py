@@ -115,7 +115,7 @@ class NAAccident(models.Model, JournalMixin):
         verbose_name_plural = u'accidents'
         permissions = (
             ('view', 'Can view network accidents'),
-            ('view_na', 'Can view network accidents info'),
+            ('view_na', 'Can view network accidents details'),
         )
 
     def __unicode__(self):
