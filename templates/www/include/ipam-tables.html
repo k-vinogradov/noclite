@@ -1,0 +1,98 @@
+{#---------------- NETWORKS ----------------#}
+<h2>IPv4 Networks</h2>
+<table class="table table-hover">
+    <thead>
+    <tr>
+        <th>#</th>
+        <th>Network Prefix</th>
+        <th>Domain</th>
+        <th>Description</th>
+        <th>Status</th>
+        <th>Size</th>
+        <th>Allocation</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for prefix in object.networks_root %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <td><a href="{{ prefix.get_absolute_url }}">{{ prefix.prefix }}</a></td>
+            <td>{{ prefix.full_domain }}</td>
+            <td>{{ prefix.description }}</td>
+            <td>{{ prefix.get_status_display }}</td>
+            <td>{{ prefix.size|default:'&mdash;' }}</td>
+            <td>
+                <div class="progress">
+                    <div class="progress-bar progress-bar-danger" style="width: {{ prefix.allocated_percents }}%"
+                         data-toggle="tooltip" data-placement="top" title="Allocated: {{ prefix.size_allocated }}"
+                         rel='tooltip'>
+                        {{ prefix.allocated_percents }}%
+                    </div>
+                    <div class="progress-bar progress-bar-warning" style="width: {{ prefix.reserved_percents }}%"
+                         data-toggle="tooltip" data-placement="top" title="Reserved: {{ prefix.size_reserved }}"
+                         rel='tooltip'>
+                        {{ prefix.reserved_percents }}%
+                    </div>
+                    <div class="progress-bar progress-bar-success" style="width: {{ prefix.free_percents }}%"
+                         data-toggle="tooltip" data-placement="top" title="Free: {{ prefix.size_free }}"
+                         rel='tooltip'>
+                        {{ prefix.free_percents }}%
+                    </div>
+                </div>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+    <tfoot>
+    <tr>
+        <td colspan="7"><strong>Totsl: {{ object.networks_root.count }} network(s)</strong></td>
+    </tr>
+    </tfoot>
+</table>
+{#---------------- HOST ----------------#}
+<h2>IPv4 Hosts</h2>
+<table class="table table-hover">
+    <thead>
+    <tr>
+        <th>#</th>
+        <th>IP Address</th>
+        <th><span title="Full Quality Domain Name">FQDN</span></th>
+        <th>Description</th>
+        <th>Status</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for prefix in object.hosts_root %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <td><a href="{{ prefix.get_absolute_url }}">{{ prefix.ip }}</a></td>
+            <td>{{ prefix.fqdn }}</td>
+            <td>{{ prefix.description }}</td>
+            <td>{{ prefix.get_status_display }}</td>
+
+        </tr>
+    {% endfor %}
+    </tbody>
+    <tfoot>
+    <tr>
+        <td colspan="7"><strong>Totsl: {{ object.hosts_root.count }} host(s)</strong></td>
+    </tr>
+    </tfoot>
+</table>
+<h2>Journal</h2>
+<table class="table table-hover">
+    <thead>
+    <tr>
+        <th>Date and Time</th>
+        <th>Message</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for record in object.journal %}
+        <tr>
+            <td>{{ record.date_time }}</td>
+            <td>{{ record.message }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>

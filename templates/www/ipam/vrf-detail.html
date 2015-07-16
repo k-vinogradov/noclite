@@ -1,0 +1,104 @@
+{% extends 'www/main.html' %}
+{% block CONTENT %}
+    {% if perms.ipam.delete_vrf %}
+        <div class="modal fade" id="vrfDelete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"><span
+                                aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                        <h4 class="modal-title" id="myModalLabel">Delete VRF {{ object.name }}</h4>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure want to delete VRF <strong>{{ object.name }}</strong>?</p>
+
+                        <p class="text-danger">
+                            <strong>
+                                {% if object.networks.count and object.hosts.count %}
+                                    Related {{ object.networks.count }} network(s) and {{ object.hosts.count }}
+                                    host(s)
+                                    will
+                                    be
+                                    deleted too.
+                                {% elif object.networks.count %}
+                                    Related {{ object.networks.count }} network(s) will be
+                                    deleted too.
+                                {% elif object.hosts.count %}
+                                    Related {{ object.hosts.count }} host(s) will be
+                                    deleted too.
+                                {% endif %}
+                            </strong>
+                        </p>
+
+                        <p>It can't be undone!</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        <a href="{{ object.get_delete_url }}" class="btn btn-danger"><i
+                                class="fa fa-trash"></i>Delete</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="btn-group btn-group-sm">
+        {% if perms.ipam.add_prefix4 %}
+            <div class="btn-group btn-group-sm">
+                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                    <i class="fa fa-plus"></i>Add <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu" role="menu">
+                    <li><a href="{% url 'ipam.host4_add' vrf=object.name %}"><i class="fa fa-desktop"></i>Host</a>
+                    </li>
+                    <li><a href="{% url 'ipam.prefix4_add' vrf=object.name %}"><i class="fa fa-sitemap"></i>Subnet</a>
+                    </li>
+                </ul>
+            </div>
+        {% endif %}
+        {% if perms.ipam.edit_vrf %}
+            <a href="{{ object.get_update_url }}" class="btn btn-default"><i class="fa fa-edit"></i>Edit</a>
+        {% endif %}
+        {% if perms.ipam.delete_vrf %}
+            <button type="button" class="btn btn-default" data-toggle="modal" data-target="#vrfDelete"><i
+                    class="fa fa-trash"></i>Delete
+            </button>
+        {% endif %}
+    </div>
+    <h2>Table Details</h2>
+
+    <div class="row">
+        <div class="col-lg-5 col-md-6 col-sm-6 col-xs-6">
+            <dl class="dl-horizontal">
+                <dt>Route-Distinguisher:</dt>
+                <dd>{{ object.rd }}</dd>
+                <dt>Description:</dt>
+                <dd>{{ object.description }}</dd>
+                {% if object.parent %}
+                    <dt>Parent</dt>
+                    <dd>{{ object.parent }}</dd>
+                {% endif %}
+                <dt>Number of networks:</dt>
+                <dd>{{ object.networks.count|default:'&mdash;' }}</dd>
+                <dt>Number of hosts:</dt>
+                <dd>{{ object.hosts.count|default:'&mdash;' }}</dd>
+            </dl>
+        </div>
+        <div class="col-lg-5 col-md-6 col-sm-6 col-xs-6">
+            <dl class="dl-horizontal">
+                <dt>Total size:</dt>
+                <dd>
+                    {{ object.size_total|default:'&mdash;' }}
+                </dd>
+                <dt>Allocated:</dt>
+                <dd>{{ object.size_allocated|default:'&mdash;' }}</dd>
+                <dt>Reserved:</dt>
+                <dd>{{ object.size_reserved|default:'&mdash;' }}</dd>
+                <dt>Free:</dt>
+                <dd>{{ object.size_free|default:'&mdash;' }}</dd>
+            </dl>
+        </div>
+    </div>
+    {% include 'www/include/ipam-tables.html' %}
+{% endblock %}

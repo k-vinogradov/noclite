@@ -1,0 +1,98 @@
+{% extends 'www/main.html' %}
+{% load custom_tags_filters %}
+{% block CONTENT %}
+    <h1>Network Accident #{{ accident.id }}</h1>
+    <div class="btn-group" role="group" aria-label="...">
+        <a href="{% url 'reports.accidents.update' pk=accident.id %}" class="btn btn-default"><i class="fa fa-edit"></i>
+            Update</a>
+        {% if perms.reports.delete_naaccident %}
+            <button type="button" class="btn btn-default" data-toggle="modal" data-target="#accidentDelete"><i
+                    class="fa fa-trash"></i>Delete
+            </button>
+        {% endif %}
+    </div>
+    {% if perms.reports.delete_naaccident %}
+        <div class="modal fade" id="accidentDelete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"><span
+                                aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                        <h4 class="modal-title" id="myModalLabel">Delete Network Accident</h4>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure want to completely delete accidend #{{ accident.id }} info?</p>
+
+                        <p class="text-danger"><strong>It can't be undone!</strong></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        <a href="{% url 'reports.accidents.delete' pk=accident.id %}" class="btn btn-danger"><i
+                                class="fa fa-trash"></i>Delete</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+    <hr/>
+    <dl class="dl-horizontal">
+        <dt>Started:</dt>
+        <dd>{{ accident.start_datetime|html_datetime_format:timezone }} {{ timezone }}</dd>
+        <dt>Finished:</dt>
+        <dd>{{ accident.finish_datetime|html_datetime_format:timezone }} {{ timezone }}</dd>
+        <dt>Duration:</dt>
+        <dd>
+            {{ accident.duration_max_str }}
+            {% if accident.is_expired %}
+                - expired in {{ accident.overtime_str }}
+            {% endif %}
+        </dd>
+        <dt>Companies:</dt>
+        <dd>{{ accident.companies_list }}</dd>
+        <dt>Cities:</dt>
+        <dd>{{ accident.cities_list }}</dd>
+        <dt>Kind of accident:</dt>
+        <dd>{{ accident.category.html_label|safe }}&nbsp; {{ accident.kind }}</dd>
+        <dt>Customers affected:</dt>
+        <dd>
+            {{ accident.affected_customers }}
+            {% if accident.magistral_customers_affected %}
+                with one or more magistral customers
+            {% endif %}
+        </dd>
+        <dt>Locations:</dt>
+        <dd>{{ accident.locations }}</dd>
+        <dt>Reason:</dt>
+        <dd>{{ accident.reason }}</dd>
+        <dt>Actions:</dt>
+        <dd>{{ accident.actions }}</dd>
+        <dt>Emergency Job ID:</dt>
+        <dd>
+            {% if accident.iss_id %}
+                <a href="{{ accident.iss_id|iss_job_url }}">{{ accident.iss_id }}</a>
+            {% endif %}
+        </dd>
+        {% if accident.consolidation_report_ignore_cause %}
+            <dt>Ignore accident:</dt>
+            <dd>{{ accident.consolidation_report_ignore_cause }}</dd>
+        {% endif %}
+    </dl>
+    <h2>Journal</h2>
+    <table class="table table-hover">
+        <thead>
+        <tr>
+            <th>Date and Time</th>
+            <th>Message</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for record in object.journal %}
+            <tr>
+                <td>{{ record.date_time }}</td>
+                <td>{{ record.message|paragraphs }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

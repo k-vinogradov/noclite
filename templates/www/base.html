@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ main_menu.module_title|default:'NOC Lite' }}</title>
+
+    <!-- Bootstrap -->
+    <link href="/static/www/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+    <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    <link rel="stylesheet" href="/static/www/font-awesome-4.2.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/static/www/css/bootstrap-datetimepicker.min.css">
+    <style>
+        i.fa {
+            margin-right: 10px;
+        }
+    </style>
+    {% comment %}
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+
+    <style>
+        i.fa {
+            margin-right: 10px;
+        }
+    </style>
+    {% endcomment %}
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="/static/www/js/jquery.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="/static/www/js/bootstrap.min.js"></script>
+    <script src="/static/www/js/moment.min.js"></script>
+    <script src="/static/www/js/bootstrap-datetimepicker.min.js"></script>
+    {% comment %}<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>{% endcomment %}
+    <script type="text/javascript">
+        $(function () {
+            $("[rel='tooltip']").tooltip();
+        });
+    </script>
+</head>
+<body>
+<div class="container-fluid">
+    {% block HEADER %}
+    {% endblock %}
+</div>
+<div class="row">
+    <div class="container-fluid">
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-10 col-lg-offset-1">
+            {% if page_title %}<h1>{{ page_title|safe }}</h1>{% endif %}
+            {% if breadcrumb %}
+                <ol class="breadcrumb">
+                    {% for link in breadcrumb %}
+                        {% if link.url %}
+                            <li><a href="{{ link.url }}">{{ link.caption }}</a></li>
+                        {% else %}
+                            <li class="active">{{ link.caption }}</li>
+                        {% endif %}
+                    {% endfor %}
+                </ol>
+            {% endif %}
+            {% block CONTENT %}
+            {% endblock %}
+        </div>
+    </div>
+</div>
+<div class="container-fluid">
+    {% block FOOTER %}
+    {% endblock %}
+</div>
+</body>
+</html>

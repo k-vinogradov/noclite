@@ -1,0 +1,25 @@
+{% extends 'www/main.html' %}
+{% block CONTENT %}
+    <div class="row">
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-10">
+            <h2>Modules</h2>
+        </div>
+    </div>
+    <div class="row">
+        {% for m in modules %}
+            <div class="col-xs-4 col-sm-4 col-md-4 col-lg-5">
+                <div class="panel panel-{% cycle 'success' 'info' 'warning' %}">
+                    <div class="panel-heading">
+                        <h3 class="panel-title"><a href="{{ m.url }}"><i class="fa fa-{{ m.icon }}"></i> {{ m.title }}
+                        </a></h3>
+                    </div>
+                    <div class="panel-body">
+                        <p>{{ m.description|safe }}</p>
+
+                        <p><a class="btn btn-default" href="{{ m.url }}">Open</a></p>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}
