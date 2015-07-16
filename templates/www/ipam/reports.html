@@ -1,8 +1,0 @@
-{% extends 'www/main.html' %}
-{% block CONTENT %}
-    <ol>
-        {% for r in reports %}
-            <li><a href="{{ r.url }}">{{ r.name }}</a></li>
-        {% endfor %}
-    </ol>
-{% endblock %}

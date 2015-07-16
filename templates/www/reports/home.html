@@ -1,9 +1,0 @@
-{% extends 'www/main.html' %}
-{% block CONTENT %}
-    <h1>Reports</h1>
-    {% for report in reports %}
-        <h3><a href="{% url report.url %}">{{ report.title }}</a></h3>
-        <p>{{ report.description }}</p>
-        <p><a class="btn btn-default" href="{% url report.url %}">Open</a></p>
-    {% endfor %}
-{% endblock %}
