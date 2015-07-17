@@ -46,7 +46,7 @@ class NARegion(NamedModel, ActiveAble):
         verbose_name_plural = u'regions'
 
     def cities_str(self):
-        return u', '.join(self.cities.filter(is_active=True))
+        return u', '.join([obj.name for obj in self.cities.filter(is_active=True)])
 
 
 class NACategory(ActiveAble):
