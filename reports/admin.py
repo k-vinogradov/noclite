@@ -23,6 +23,7 @@ class NAConsolidationGroupAdmin(admin.ModelAdmin):
 @admin.register(NARegion)
 class NARegionAdmin(SimpleAdmin):
     filter_horizontal = ['cities', ]
+    list_display = ['__unicode__', 'cities_str', 'is_active', ]
 
 
 @admin.register(NADay)
