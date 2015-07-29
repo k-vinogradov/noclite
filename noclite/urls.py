@@ -97,7 +97,7 @@ urlpatterns = patterns(
         permission_required(['reports.delete_naaccident', ])(reports_accidents.AccidentDeleteView.as_view()),
         name='reports.accidents.delete'),
 
-    url(r'reports/accidents/cg/$', permission_required(['view_cg'])(reports_accidents.CGReport.as_view()),
+    url(r'reports/accidents/cg/$', permission_required(['reports.view_cg'])(reports_accidents.CGReport.as_view()),
         name='reports.accidents.cg'),
 
 )

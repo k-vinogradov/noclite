@@ -52,33 +52,89 @@
             <dt>Total accidents:</dt>
             <dd>{{ list_properties.count }}</dd>
         </dl>
-        <a href="{% url 'reports.accidents.add' %}" class="btn btn-default btn-sm"><i
-                class="fa fa-plus"></i>
-            New accident</a>
+        <div class="btn-group" role="group">
+            <a href="{% url 'reports.accidents.add' %}" class="btn btn-default btn-sm"><i
+                    class="fa fa-plus"></i>
+                New accident</a>
+            {% if perms.reports.view_cg %}
+                <a href="{% url 'reports.accidents.cg' %}" class="btn btn-default btn-sm"><i
+                        class="fa fa-cube"></i>
+                    Consolidation Report</a>
+            {% endif %}
+        </div>
         <table class="table table-hover">
             <thead>
             <tr>
                 <th>Date and time</th>
-                <th>Company</th>
-                <th>City</th>
-                <th>Kind of Accident</th>
-                <th>Duration</th>
-                <th>Customers Affected</th>
-                <th>Reason</th>
+                <th>Company,<br/>
+                    City
+                </th>
+                <th>Locations</th>
+                <th>
+                    Category,<br/>
+                    Reason
+                </th>
+                <th>Duration,<br/>
+                    Customers
+                </th>
             </tr>
             </thead>
             <tbody>
             {% for accident in list %}
                 <tr {% if not accident.is_completed %}class="warning"{% endif %}>
-                    <td>
+                    <td style="padding-left: 2px; padding-right: 2px">
                         <a href="{% url 'reports.accidents.detail' pk=accident.id %}">{{ accident|accident_time_interval:list_properties.timezone }}</a>
                     </td>
-                    <td>{{ accident.companies_list }}</td>
-                    <td>{{ accident.cities_list }}</td>
-                    <td>{{ accident.category.html_label|safe }}&nbsp;&nbsp; {{ accident.kind }}</td>
-                    <td>
+                    <td style="padding-left: 2px; padding-right: 2px"><em>{{ accident.companies_list }}:</em><br/>
+                        {% if accident.cities_list|wordcount >= 2 %}
+                            <span data-toggle="tooltip"
+                                  data-placement="top"
+                                  title="{{ accident.cities_list }}"
+                                  rel='tooltip'>
+                                {{ accident.cities_list|truncatewords:2 }}
+                            </span>
+                        {% else %}
+                            {{ accident.cities_list }}
+                        {% endif %}
+                    </td>
+                    <td style="padding-left: 2px; padding-right: 2px">
+                        {% if accident.locations|wordcount >= 5 %}
+                            <span data-toggle="tooltip"
+                                  data-placement="top"
+                                  title="{{ accident.locations }}"
+                                  rel='tooltip'>
+                                {{ accident.locations|truncatewords:5 }}
+                            </span>
+                        {% else %}
+                            {{ accident.locations }}
+                        {% endif %}
+                    </td>
+                    <td style="padding-left: 2px; padding-right: 2px">
+                        <span data-toggle="tooltip" data-placement="top" title="{{ accident.kind.title }}"
+                              rel='tooltip'>
+                            {{ accident.kind.code }}&nbsp;&ndash;&nbsp;{{ accident.category.html_label|safe }}
+                        </span>
+                        <br/>
                         <nobr>
-                            {{ accident.duration_max_str }}
+                            {% if accident.reason|wordcount >= 3 %}
+                                <span data-toggle="tooltip"
+                                      data-placement="top"
+                                      title="{{ accident.reason }}"
+                                      rel='tooltip'>
+                                {{ accident.reason|truncatewords:3 }}
+                            </span>
+                            {% else %}
+                                {{ accident.reason }}
+                            {% endif %}
+                        </nobr>
+                    </td>
+                    <td style="padding-left: 2px; padding-right: 2px">
+                        <nobr>
+                            {% if accident.duration_max_str %}
+                                {{ accident.duration_max_str }}
+                            {% else %}
+                                &mdash;
+                            {% endif %}
                             {% if accident.is_expired %}
                                 <i class="fa fa-exclamation-triangle" style="color: #d9534f;"
                                    data-toggle="tooltip"
@@ -86,15 +142,15 @@
                                    rel='tooltip'></i>
                             {% endif %}
                         </nobr>
-                    </td>
-                    <td>
-                        {{ accident.affected_customers }}
+                        <br/>
+                        {% if accident.affected_customers %}
+                            {{ accident.affected_customers }}&nbsp;cust.
+                        {% endif %}
                         {% if accident.magistral_customers_affected %}
                             <span class="label label-default"
                                   title="Magistral customers affected">Magistral</span>
                         {% endif %}
                     </td>
-                    <td>{{ accident.reason }}</td>
                 </tr>
             {% endfor %}
 

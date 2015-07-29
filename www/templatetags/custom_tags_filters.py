@@ -16,27 +16,42 @@ def form_filed_type(field):
 
 @register.filter
 def accident_time_interval(accident, tz):
-    if not accident.start_datetime and accident.finish_datetime:
-        result = u'N/A'
-    elif not accident.start_datetime:
-        finish_datetime = accident.finish_datetime.astimezone(tz)
-        result = u'<nobr>N/A &nbsp;&mdash;&nbsp;</nobr> <nobr>{0}</nobr>'.format(
-            finish_datetime.strftime('<strong>%d.%m.%Y</strong> %H<sup><u>%M</u></sup>'))
-    elif not accident.finish_datetime:
+    if accident.start_datetime:
         start_datetime = accident.start_datetime.astimezone(tz)
-        result = u'<nobr>{0} &nbsp;&mdash;&nbsp;</nobr> N/A'.format(
-            start_datetime.strftime('<strong>%d.%m.%Y</strong> %H<sup><u>%M</u></sup>'))
+        start_date = start_datetime.strftime('%d.%m.%Y')
+        start_time = start_datetime.strftime('%H<sup><u>%M</u></sup>')
     else:
-        start_datetime = accident.start_datetime.astimezone(tz)
+        start_date = ''
+        start_time = ''
+
+    if accident.start_datetime:
         finish_datetime = accident.finish_datetime.astimezone(tz)
+        finish_date = start_datetime.strftime('%d.%m.%Y')
+        finish_time = start_datetime.strftime('%H<sup><u>%M</u></sup>')
+    else:
+        finish_date = ''
+        start_time = ''
+
+    if not accident.start_datetime and accident.finish_datetime:
+        result_template = u'N/A'
+    elif not accident.start_datetime:
+        result_template = u'<nobr>N/A &nbsp;&mdash;&nbsp;</nobr> <nobr>{finish_date} {finish_time}</nobr>'
+    elif not accident.finish_datetime:
+        result_template = u'<nobr>{start_date} {start_time} &mdash;</nobr> N/A'
+    else:
         if start_datetime.date() == finish_datetime.date():
-            result = u'<nobr>{0} &nbsp;&mdash;&nbsp;</nobr> <nobr>{1}</nobr>'.format(
-                start_datetime.strftime('<strong>%d.%m.%Y</strong> %H<sup><u>%M</u></sup>'),
-                finish_datetime.strftime('%H<sup><u>%M</u></sup>'))
+            result_template = u'<nobr><strong>{start_date}</strong></nobr>' \
+                              u' <nobr>{start_time} &mdash; {finish_time}</nobr>'
+
         else:
-            result = u'<nobr>{0} &nbsp;&mdash;&nbsp;</nobr> <nobr>{1}</nobr>'.format(
-                start_datetime.strftime('<strong>%d.%m.%Y</strong> %H<sup><u>%M</u></sup>'),
-                finish_datetime.strftime('<strong>%d.%m.%Y</strong> %H<sup><u>%M</u></sup>'))
+            result_template = u'<nobr><strong>{start_date}</strong> {start_time} &mdash;</nobr>' \
+                              u' <nobr><strong>{finish_date}</strong> {finish_time}</nobr>'
+    result = result_template.format(
+        start_date=start_datetime.strftime('%d.%m.%Y'),
+        finish_date=finish_datetime.strftime('%d.%m.%Y'),
+        start_time=start_datetime.strftime('%H<sup><u>%M</u></sup>'),
+        finish_time=finish_datetime.strftime('%H<sup><u>%M</u></sup>'),
+    )
     return mark_safe(result)
 
 
@@ -70,10 +85,11 @@ def percent(value, arg=None):
         try:
             value = float(value)
             arg = float(arg)
-            return '{0:.5}%'.format(value/arg*100)
+            return '{0:.5}%'.format(value / arg * 100)
         except:
             pass
     return ''
+
 
 @register.filter
 def paragraphs(value):

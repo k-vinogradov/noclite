@@ -1,19 +1,23 @@
 from django import forms
 from django.core.management import settings
-from pytz import all_timezones, timezone
 from django.forms import ValidationError
 
+TIME_ZONES = (
+    (settings.TIME_ZONE, 'Default ({0})'.format(settings.TIME_ZONE)),
+    ('Etc/GMT-3', 'Etc/GMT-3 (Moscow)'),
+    ('Etc/GMT-7', 'Etc/GMT-7 (Krasnoyarsk)'),
+)
 
 class ListDateIntervalForm(forms.Form):
     started = forms.DateField()
     finished = forms.DateField()
-    tz = forms.ChoiceField(choices=((t, t) for t in all_timezones), initial=settings.TIME_ZONE)
+    tz = forms.ChoiceField(choices=TIME_ZONES, initial=settings.TIME_ZONE)
 
 
 class ConsolidationReportForm(forms.Form):
     start = forms.DateTimeField()
     finish = forms.DateTimeField()
-    tz = forms.ChoiceField(choices=((t, t) for t in all_timezones), initial=settings.TIME_ZONE)
+    tz = forms.ChoiceField(choices=TIME_ZONES, initial=settings.TIME_ZONE)
 
     def clean(self):
         cleaned_data = super(ConsolidationReportForm, self).clean()

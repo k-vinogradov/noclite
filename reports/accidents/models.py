@@ -95,8 +95,8 @@ class NAAccident(models.Model, JournalMixin):
                                        limit_choices_to=ActiveAble.limit_choice())
     cities = models.ManyToManyField('NACity', null=True, blank=True, verbose_name=u'City',
                                     limit_choices_to=ActiveAble.limit_choice())
-    start_datetime = models.DateTimeField(blank=True, null=True, verbose_name=u'Time of the beginning')
-    finish_datetime = models.DateTimeField(blank=True, null=True, verbose_name=u'Time of the finishing')
+    start_datetime = models.DateTimeField(blank=True, null=True, verbose_name=u'Begining time')
+    finish_datetime = models.DateTimeField(blank=True, null=True, verbose_name=u'Finish time')
     category = models.ForeignKey('NACategory', blank=True, null=True, verbose_name=u'Category',
                                  limit_choices_to=ActiveAble.limit_choice())
     kind = models.ForeignKey('NAKind', blank=True, null=True, verbose_name=u'Kind',
@@ -132,7 +132,7 @@ class NAAccident(models.Model, JournalMixin):
         super(NAAccident, self).clean()
         if self.start_datetime and self.finish_datetime:
             if self.finish_datetime < self.start_datetime:
-                raise ValidationError(u'The accident can\'t be finished earlier thant it was started.')
+                raise ValidationError(u'The accident can\'t be finished earlier thant it\'s been started.')
 
     def journal(self):
         from www.models import Journal
@@ -315,6 +315,11 @@ class NADayType(NamedModel):
         else:
             return ''
 
+    def clean(self):
+        super(NADayType, self).clean()
+        if self.finish < self.start:
+            raise ValidationError(u'Finish time can\'t be earlier than start one.')
+
 
 class NADay(models.Model):
     date = models.DateField(verbose_name=u'Date')
@@ -446,7 +451,7 @@ class NAConsolidationGroup(NamedModel):
         cat_id = []
         for cmap in self.nakindcategorymap_set.all():
             cat_id += [c.id for c in cmap.categories.all()]
-        result = {'title': self.name, 'total': {'ontime': 0, 'expired': 0, 'total': 0}}
+        result = {'title': self.name, 'total': {'ontime': 0, 'expired': 0, 'total': 0}, 'accidents': []}
         rows = dict(
             (c, {'category': c, 'ontime': 0, 'expired': 0, 'total': 0}) for c in
             NACategory.objects.filter(id__in=cat_id))
@@ -454,16 +459,26 @@ class NAConsolidationGroup(NamedModel):
             rows[a.category]['total'] += 1
             result['total']['total'] += 1
             expired_dict = a.is_expired_by_region()
+            duration_dict = a.accident_durations()
+            duration = 0
             expired = False
             for r in self.regions.all():
-                if r in expired_dict:
-                    expired = expired or expired_dict[r]
+                if r in expired_dict and expired_dict[r]:
+                    expired = True
+                    duration = duration_dict[r]
             if expired:
                 rows[a.category]['expired'] += 1
                 result['total']['expired'] += 1
             else:
                 rows[a.category]['ontime'] += 1
                 result['total']['ontime'] += 1
+            if not duration:
+                duration = max([duration_dict[r] for r in self.regions.all() if r in duration_dict])
+            result['accidents'].append({
+                'instance': a,
+                'duration': timedelta(minutes=duration).__str__()[:-3] if duration > 0 else u'',
+                'is_expired': expired,
+            })
+
         result['rows'] = rows.values()
-        result['accidents'] = self.accidents(started=start_datetime, finished=finish_datetime)
         return result

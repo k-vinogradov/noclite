@@ -88,16 +88,24 @@ class JournalMixin(object):
                 email=user.email,
                 verbose_name=meta.verbose_name)
             for field in meta.fields:
-                if getattr(self, field.name):
-                    verbose_name = field._verbose_name
-                    if field.__class__.__name__ == 'DateTimeField':
-                        value = unicode(getattr(self, field.name).astimezone(get_default_timezone()))
-                        p_value = unicode(getattr(p_instance, field.name).astimezone(get_default_timezone()))
-                    else:
-                        value = unicode(getattr(self, field.name))
-                        p_value = unicode(getattr(p_instance, field.name))
-                    if value != p_value:
-                        message += u'\n{0}: {1}'.format(verbose_name, value)
+                value = getattr(self, field.name)
+                p_value = getattr(p_instance, field.name)
+                verbose_name = field._verbose_name
+                if value and field.__class__.__name__ == 'DateTimeField':
+                    value = unicode(value.astimezone(get_default_timezone()))
+                elif value:
+                    value = unicode(value)
+                else:
+                    value = None
+                if p_value and field.__class__.__name__ == 'DateTimeField':
+                    p_value = unicode(p_value.astimezone(get_default_timezone()))
+                elif value:
+                    p_value = unicode(p_value)
+                else:
+                    p_value = None
+                if value != p_value:
+                    message += u'\n{0}: {1}'.format(verbose_name, value if value else u'N/A')
+
             for field in meta._many_to_many():
                 if getattr(self, field.name).count() > 1:
                     verbose_name = field._verbose_name

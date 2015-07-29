@@ -476,7 +476,7 @@ def datetime_now():
 
 
 def datetime_now_str():
-    return datetime_now().strftime('%Y%m%d%H%M%S')
+    return datetime_now().strftime('%Y%m%d00')
 
 
 class Domain4(models.Model):
