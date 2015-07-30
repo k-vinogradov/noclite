@@ -56,6 +56,9 @@
             <a href="{% url 'reports.accidents.add' %}" class="btn btn-default btn-sm"><i
                     class="fa fa-plus"></i>
                 New accident</a>
+        <a href="{% url 'reports.accidents'%}?export=xlsx" class="btn btn-default btn-sm">
+            <i class="fa fa-file-excel-o"></i>Export to MS Excel
+        </a>
             {% if perms.reports.view_cg %}
                 <a href="{% url 'reports.accidents.cg' %}" class="btn btn-default btn-sm"><i
                         class="fa fa-cube"></i>
