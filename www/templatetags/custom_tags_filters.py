@@ -21,23 +21,25 @@ def accident_time_interval(accident, tz):
         start_date = start_datetime.strftime('%d.%m.%Y')
         start_time = start_datetime.strftime('%H<sup><u>%M</u></sup>')
     else:
+        start_datetime = None
         start_date = ''
         start_time = ''
 
-    if accident.start_datetime:
+    if accident.finish_datetime:
         finish_datetime = accident.finish_datetime.astimezone(tz)
-        finish_date = start_datetime.strftime('%d.%m.%Y')
-        finish_time = start_datetime.strftime('%H<sup><u>%M</u></sup>')
+        finish_date = finish_datetime.strftime('%d.%m.%Y')
+        finish_time = finish_datetime.strftime('%H<sup><u>%M</u></sup>')
     else:
+        finish_datetime = None
         finish_date = ''
-        start_time = ''
+        finish_time = ''
 
-    if not accident.start_datetime and accident.finish_datetime:
+    if not start_datetime and not finish_datetime:
         result_template = u'N/A'
-    elif not accident.start_datetime:
+    elif not start_datetime:
         result_template = u'<nobr>N/A &nbsp;&mdash;&nbsp;</nobr> <nobr>{finish_date} {finish_time}</nobr>'
-    elif not accident.finish_datetime:
-        result_template = u'<nobr>{start_date} {start_time} &mdash;</nobr> N/A'
+    elif not finish_datetime:
+        result_template = u'<nobr><strong>{start_date}</strong> {start_time} &mdash;</nobr> N/A'
     else:
         if start_datetime.date() == finish_datetime.date():
             result_template = u'<nobr><strong>{start_date}</strong></nobr>' \
@@ -47,10 +49,10 @@ def accident_time_interval(accident, tz):
             result_template = u'<nobr><strong>{start_date}</strong> {start_time} &mdash;</nobr>' \
                               u' <nobr><strong>{finish_date}</strong> {finish_time}</nobr>'
     result = result_template.format(
-        start_date=start_datetime.strftime('%d.%m.%Y'),
-        finish_date=finish_datetime.strftime('%d.%m.%Y'),
-        start_time=start_datetime.strftime('%H<sup><u>%M</u></sup>'),
-        finish_time=finish_datetime.strftime('%H<sup><u>%M</u></sup>'),
+        start_date=start_date,
+        finish_date=finish_date,
+        start_time=start_time,
+        finish_time=finish_time,
     )
     return mark_safe(result)
 
