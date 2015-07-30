@@ -105,7 +105,8 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.static',
     'django.core.context_processors.tz',
     'django.contrib.messages.context_processors.messages',
-    'www.context_processors.main_menu',)
+    'www.context_processors.main_menu',
+    'django.core.context_processors.request',)
 
 LOGIN_REDIRECT_URL = 'home'
 LOGIN_URL = 'login'

@@ -1,7 +1,12 @@
 {% extends 'www/main.html' %}
 {% load custom_tags_filters %}
 {% block CONTENT %}
-
+    {% if request.META.QUERY_STRING %}
+        YES
+    {% else %}
+        NO
+    {% endif %}
+    <p>{{ request.META.QUERY_STRING }}</p>
     <form role="form" method="get" class="form-inline">
         <div class="form-group">
             <label for="{{ form.started.auto_id }}">From </label>
@@ -56,9 +61,12 @@
             <a href="{% url 'reports.accidents.add' %}" class="btn btn-default btn-sm"><i
                     class="fa fa-plus"></i>
                 New accident</a>
-        <a href="{% url 'reports.accidents'%}?export=xlsx" class="btn btn-default btn-sm">
-            <i class="fa fa-file-excel-o"></i>Export to MS Excel
-        </a>
+            {% with request.META.QUERY_STRING as query %}
+                <a href="{% url 'reports.accidents' %}?export=xlsx{% if query %}%{{ query }}{% endif %}"
+                   class="btn btn-default btn-sm">
+                    <i class="fa fa-file-excel-o"></i>Export to MS Excel
+                </a>
+            {% endwith %}
             {% if perms.reports.view_cg %}
                 <a href="{% url 'reports.accidents.cg' %}" class="btn btn-default btn-sm"><i
                         class="fa fa-cube"></i>
