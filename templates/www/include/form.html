@@ -10,7 +10,12 @@
         {% if field.is_hidden %}
             {{ field }}
         {% elif field.field|form_filed_type == 'DateTimeField' %}
-            <label for="{{ field.auto_id }}">{{ field.label }}</label>
+            <label for="{{ field.auto_id }}">{{ field.label }}
+                {% if field.field.required %}
+                    <i class="fa fa-asterisk"
+                       style="margin:0px; color: red; vertical-align: super; font-size: x-small"></i>
+                {% endif %}
+            </label>
             <div class="form-group input-group date {% if field.errors %}has-error{% endif %}"
                  id='datetimepicker{{ forloop.counter }}' {% if field.errors %}style="margin-bottom: 0px;"{% endif %}>
                 <span class="input-group-addon"><span

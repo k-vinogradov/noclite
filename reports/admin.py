@@ -10,7 +10,7 @@ class SimpleAdmin(admin.ModelAdmin):
 
 class NAKindCategoryMapAdmin(admin.StackedInline):
     model = NAKindCategoryMap
-    filter_horizontal = ['kinds', 'categories']
+    filter_horizontal = ['kinds', 'categories', 'ignore_kinds', 'ignore_categories']
 
 
 @admin.register(NAConsolidationGroup)

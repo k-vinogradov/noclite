@@ -46,7 +46,59 @@
         {% endfor %}
     {% endif %}
     {% for g in report %}
-        <h3>{{ g.title }}</h3>
+        <h3>{{ g.title }} <a href="" data-toggle="modal" data-target="#modal{{ forloop.counter }}"><i
+                class="fa fa-info-circle small"></i></a>
+        </h3>
+        <!-- Modal -->
+        <div class="modal" id="modal{{ forloop.counter }}" tabindex="-1" role="dialog"
+             aria-labelledby="myModalLabel">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="myModalLabel">{{ g.title }}</h4>
+                    </div>
+                    <div class="modal-body">
+                        Consolidation report group "{{ g.title }}" collects accidents from regions:
+                        <ul>
+                            {% for r in g.regions %}
+                                <li><strong>{{ r }}</strong> &mdash; {{ r.cities_str }}</li>
+                            {% endfor %}
+                        </ul>
+                        and companies:
+                        <ul>{{ g.companies|unordered_list }}</ul>
+                        Accident must match to the any of the following conditions ({{ g.maps|length }}):
+                        <ol>
+                            {% for m in g.maps %}
+                                <li>
+                                    Kinds:
+                                    <ul>{{ m.kinds|unordered_list }}</ul>
+                                    Categories:
+                                    <ul>{{ m.categories|unordered_list }}</ul>
+                                    {% if m.i_kinds or m.i_categories %}
+                                        For the accidents which
+                                        {% if m.i_kinds %}
+                                            has any kind from
+                                            <ul>{{ m.i_kinds|unordered_list }}</ul>
+                                        {% endif %}
+                                        {% if m.i_categories %}
+                                            {% if m.i_kinds %}and{% endif %}
+                                            any category from
+                                            <ul>{{ m.i_categories|unordered_list }}</ul>
+                                        {% endif %}
+                                        expired durations will be ignored.
+                                    {% endif %}
+                                </li>
+                            {% endfor %}
+                        </ol>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
         <table class="table table-hover">
             <thead>
             <tr>

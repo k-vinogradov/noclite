@@ -412,12 +412,39 @@ class NAKindCategoryMap(models.Model):
                                    limit_choices_to=ActiveAble.limit_choice())
     categories = models.ManyToManyField('NACategory', verbose_name=u'Categories',
                                         limit_choices_to=ActiveAble.limit_choice())
+    ignore_kinds = models.ManyToManyField('NAKind', related_name='ignore_nakind_set',
+                                          verbose_name=u'Ignore',
+                                          help_text=u'Ignore expired check for accidents, which have this kinds.',
+                                          limit_choices_to=ActiveAble.limit_choice(), blank=True, null=True)
+    ignore_categories = models.ManyToManyField('NACategory', related_name='ignore_nacategory_set',
+                                               verbose_name=u'Ignore',
+                                               help_text=u'Ignore expired check for accidents, which have this '
+                                                         u'categories.',
+                                               limit_choices_to=ActiveAble.limit_choice(), blank=True, null=True)
     consolidation_group = models.ForeignKey('NAConsolidationGroup')
+
+    def clean(self):
+        super(NAKindCategoryMap, self).clean()
+        if self.id:
+            for k in self.ignore_kinds.all():
+                if k not in self.kinds.all():
+                    ValidationError('Kind list must contain every item from "expired-ignore" list')
+            for c in self.ignore_categories.all():
+                if c not in self.categories.all():
+                    ValidationError('Category list must contain every item from "expired-ignore" list')
 
     def accidents(self, **kwargs):
         kwargs['kind__in'] = self.kinds.all()
         kwargs['category__in'] = self.categories.all()
         return NAAccident.objects.filter(**kwargs).distinct()
+
+    def expired_ignored_accidents(self, **kwargs):
+        params = {}
+        if self.ignore_kinds.count() > 0:
+            params['kind__in'] = self.ignore_kinds.all()
+        if self.ignore_categories.count() > 0:
+            params['category__in'] = self.ignore_categories.all()
+        return self.accidents(**kwargs).filter(**params)
 
 
 class NAConsolidationGroup(NamedModel):
@@ -434,7 +461,7 @@ class NAConsolidationGroup(NamedModel):
     def cities(self):
         return NACity.objects.filter(naregion__in=self.regions.all())
 
-    def accidents(self, started=None, finished=None):
+    def accidents(self, started=None, finished=None, ignored=False):
         params = {'cities__in': self.cities(), 'companies__in': self.companies.all(),
                   'consolidation_report_ignore_cause': u''}
         if started:
@@ -443,7 +470,10 @@ class NAConsolidationGroup(NamedModel):
             params['start_datetime__lte'] = finished
         accidents_id = []
         for cmap in self.nakindcategorymap_set.all():
-            accidents_id += [a.id for a in cmap.accidents(**params) if a.is_completed()]
+            if ignored:
+                accidents_id += [a.id for a in cmap.expired_ignored_accidents(**params) if a.is_completed()]
+            else:
+                accidents_id += [a.id for a in cmap.accidents(**params) if a.is_completed()]
         params['id__in'] = accidents_id
         return NAAccident.objects.filter(**params).distinct()
 
@@ -451,10 +481,22 @@ class NAConsolidationGroup(NamedModel):
         cat_id = []
         for cmap in self.nakindcategorymap_set.all():
             cat_id += [c.id for c in cmap.categories.all()]
-        result = {'title': self.name, 'total': {'ontime': 0, 'expired': 0, 'total': 0}, 'accidents': []}
+        result = {
+            'title': self.name,
+            'total': {'ontime': 0, 'expired': 0, 'total': 0},
+            'accidents': [],
+            'cities': self.cities(),
+            'regions': self.regions.all(),
+            'companies': self.companies.all(),
+            'maps': [
+                {'kinds': obj.kinds.all(),
+                 'categories': obj.categories.all(),
+                 'i_kinds': obj.ignore_kinds.all(),
+                 'i_categories': obj.ignore_categories.all()} for obj in self.nakindcategorymap_set.all()], }
         rows = dict(
             (c, {'category': c, 'ontime': 0, 'expired': 0, 'total': 0}) for c in
             NACategory.objects.filter(id__in=cat_id))
+        ignored_accidents = self.accidents(started=start_datetime, finished=finish_datetime, ignored=True)
         for a in self.accidents(started=start_datetime, finished=finish_datetime):
             rows[a.category]['total'] += 1
             result['total']['total'] += 1
@@ -466,7 +508,7 @@ class NAConsolidationGroup(NamedModel):
                 if r in expired_dict and expired_dict[r]:
                     expired = True
                     duration = duration_dict[r]
-            if expired:
+            if expired and a not in ignored_accidents:
                 rows[a.category]['expired'] += 1
                 result['total']['expired'] += 1
             else:
