@@ -257,6 +257,15 @@ class NAAccident(models.Model, JournalMixin):
         minutes = self.duration_max()
         return timedelta(minutes=minutes).__str__()[:-3] if minutes > 0 else u''
 
+    def accident_duration_str(self):
+        expired = self.is_expired_by_region()
+        durations = self.accident_durations()
+        return [
+            {'region': key,
+             'duration': timedelta(minutes=durations[key]).__str__()[:-3] if durations[key] > 0 else u'',
+             'is_expired': expired[key]} for key in durations
+        ]
+
     def _time_limit(self):
         if not self.is_completed():
             return 1000000
