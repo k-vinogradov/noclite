@@ -444,6 +444,10 @@ class NAKindCategoryMap(models.Model):
             params['kind__in'] = self.ignore_kinds.all()
         if self.ignore_categories.count() > 0:
             params['category__in'] = self.ignore_categories.all()
+        if len(params) == 0:
+            params['kind__in'] = []
+            params['category__in'] = []
+
         return self.accidents(**kwargs).filter(**params)
 
 
