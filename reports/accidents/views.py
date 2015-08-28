@@ -50,21 +50,20 @@ class AccidentsList(FormView):
                 {'index': 10, 'title': u'Выполненные АВР', 'width': 23},
             ]
 
+            if 'expired' in self.request.GET:
+                columns_formats.append({'index': 11, 'title': u'Превышение КС', 'width': 15})
+
             output = io.BytesIO()
             workbook = Workbook(output, {'in_memory': True})
 
             header_format = workbook.add_format(
                 properties={
-                    #'bold': True,
                     'bg_color': 'yellow',
                     'border_color': 'black',
                     'border': 1,
                     'text_wrap': True,
                     'valign': 'top'})
             text_wrap = workbook.add_format(properties={'text_wrap': True, 'valign': 'top'})
-            # header_format.set_bold()
-            #header_format.set_bg_color('yellow')
-            #header_format.set_border_color('black')
 
             worksheet = workbook.add_worksheet(u'Аварии')
             worksheet.write_row(0, 0, [col['title'] for col in columns_formats], header_format)
@@ -75,7 +74,7 @@ class AccidentsList(FormView):
                 accident = obj
                 """:type : NAAccident """
                 if accident.is_completed():
-                    worksheet.write_row(row_index, 0, [
+                    cells = [
                         accident.companies_list(),
                         accident.cities_list(),
                         accident.start_datetime.astimezone(context['list_properties']['timezone']).strftime(
@@ -88,10 +87,11 @@ class AccidentsList(FormView):
                         accident.locations,
                         accident.affected_customers,
                         accident.reason,
-                        accident.actions
-                    ], text_wrap)
+                        accident.actions]
+                    if 'expired' in self.request.GET:
+                        cells.append(u'Да' if accident.is_expired() else u'Нет')
+                    worksheet.write_row(row_index, 0, cells, text_wrap)
                 row_index += 1
-
             workbook.close()
             output.seek(0)
             response = HttpResponse(output.read(),

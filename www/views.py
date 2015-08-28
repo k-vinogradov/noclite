@@ -6,6 +6,7 @@ from django.views.generic import FormView
 from django.core.urlresolvers import reverse_lazy
 from django.conf import settings
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from www.models import InformationSystem
 
 
 class HomeView(TemplateView):
@@ -30,6 +31,7 @@ class HomeView(TemplateView):
                         'icon': module.module_icon, })
             except AttributeError:
                 continue
+        context['systems'] = InformationSystem.objects.all()
         context['modules'] = modules
         return context
 

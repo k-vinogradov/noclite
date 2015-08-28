@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
 
-from www.models import Profile, Journal
+from www.models import Profile, Journal, InformationSystem
 
 
 class ProfileInline(admin.StackedInline):
@@ -23,3 +23,4 @@ class JournalAdmin(admin.ModelAdmin):
 admin.site.unregister(User)
 admin.site.register(User, UserAdminWithProfile)
 admin.site.register(Journal, JournalAdmin)
+admin.site.register(InformationSystem)

@@ -93,3 +93,13 @@ class Journal(models.Model):
         super(Journal, self).save(*args, **kwargs)
         if self.get_related_objects_count() == 0:
             self.delete()
+
+
+class InformationSystem(models.Model):
+    caption = models.CharField(max_length=255, verbose_name=u'System\' caption')
+    url = models.CharField(max_length=255, verbose_name=u'URL')
+    description = models.TextField(blank=True, null=True, verbose_name=u'Description')
+
+    class Meta:
+        verbose_name = u'system'
+        ordering = ['caption', ]
