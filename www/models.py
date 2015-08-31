@@ -103,3 +103,9 @@ class InformationSystem(models.Model):
     class Meta:
         verbose_name = u'system'
         ordering = ['caption', ]
+
+    def __unicode__(self):
+        if self.id:
+            return u'{0}'.format(self.caption)
+        else:
+            return u'New IS'
