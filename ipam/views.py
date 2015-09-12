@@ -276,3 +276,18 @@ class Domain4ZoneView(TemplateView, TemplateResponseMixin):
         response = super(Domain4ZoneView, self).render_to_response(context, **response_kwargs)
         response['Content-Disposition'] = 'attachment; filename={0}'.format(self.request.GET['zone'])
         return response
+
+
+class Domain4List(TemplateView, TemplateResponseMixin):
+    template_name = 'www/ipam/domain-list.html'
+    content_type = 'application/octet-stream'
+
+    def get_context_data(self, **kwargs):
+        context = super(Domain4List, self).get_context_data(**kwargs)
+        context['domains'] = Domain4.objects.all()
+        return context
+
+    def render_to_response(self, context, **response_kwargs):
+        response = super(Domain4List, self).render_to_response(context, **response_kwargs)
+        response['Content-Disposition'] = 'attachment; filename=domain-list.txt'
+        return response

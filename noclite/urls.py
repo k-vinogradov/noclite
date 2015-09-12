@@ -77,6 +77,7 @@ urlpatterns = patterns(
         name='ipam.report_free4'),
 
     url(r'ipam/domains/$', ipam.Domain4ZoneView.as_view(), name='ipam.domain'),
+    url(r'ipam/domain-list/$', ipam.Domain4List.as_view(), name='ipam.domain_list'),
 
     # REPORTS MODULE
     url(r'reports/$', permission_required(['reports.view', ])(reports.ReportsMainPage.as_view()), name='reports.home'),
