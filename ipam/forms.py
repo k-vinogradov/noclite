@@ -11,5 +11,5 @@ class FreeBlocks4ReportForm(forms.Form):
     def clean_prefix(self):
         data = self.cleaned_data['prefix']
         if not match(r'(\d{1,3}\.){3}\d{1,3}/\d{1,2}', data.strip()):
-            forms.ValidationError('Invalid IPv4-prefix')
+            raise forms.ValidationError('Invalid IPv4-prefix')
         return data
