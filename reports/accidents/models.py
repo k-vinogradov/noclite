@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, time
 
+from django.core import serializers
 from django.db import models
 from django.utils import timezone
 from django.core.exceptions import ValidationError
@@ -264,7 +265,7 @@ class NAAccident(models.Model, JournalMixin):
             {'region': key,
              'duration': timedelta(minutes=durations[key]).__str__()[:-3] if durations[key] > 0 else u'',
              'is_expired': expired[key]} for key in durations
-        ]
+            ]
 
     def _time_limit(self):
         if not self.is_completed():
@@ -302,6 +303,9 @@ class NAAccident(models.Model, JournalMixin):
 
     def overtime_str(self):
         return timedelta(minutes=self.overtime()).__str__()[:-3]
+
+    def json(self):
+        return serializers.serialize('json', [self, ])
 
 
 class NADayType(NamedModel):
@@ -505,7 +509,7 @@ class NAConsolidationGroup(NamedModel):
                 {'kinds': obj.kinds.all(),
                  'categories': obj.categories.all(),
                  'i_kinds': obj.ignore_kinds.all(),
-                 'i_categories': obj.ignore_categories.all()} for obj in self.nakindcategorymap_set.all()], }
+                 'i_categories': obj.ignore_categories.all()} for obj in self.nakindcategorymap_set.all()],}
         rows = dict(
             (c, {'category': c, 'ontime': 0, 'expired': 0, 'total': 0}) for c in
             NACategory.objects.filter(id__in=cat_id))

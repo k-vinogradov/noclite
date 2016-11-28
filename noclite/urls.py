@@ -1,11 +1,13 @@
 from django.conf.urls import patterns, include, url
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib import admin
+from django.views.decorators.csrf import csrf_exempt
 
 import www.views as www
 import ipam.views as ipam
 import reports.views as reports
 import reports.accidents.views as reports_accidents
+import reports.accidents.api as accidents_api
 
 urlpatterns = patterns(
     '',
@@ -100,5 +102,11 @@ urlpatterns = patterns(
 
     url(r'reports/accidents/cg/$', permission_required(['reports.view_cg'])(reports_accidents.CGReport.as_view()),
         name='reports.accidents.cg'),
+
+    # API
+    url(r'api/reports/accidents/references/$', csrf_exempt(accidents_api.GetReferencesAPI.as_view()),
+        name='api.reports.accidents.references'),
+    url(r'api/reports/accidents/update/$', csrf_exempt(accidents_api.UpdateAPI.as_view()),
+        name='api.reports.accidents.update'),
 
 )
