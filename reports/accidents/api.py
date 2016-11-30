@@ -1,6 +1,7 @@
 import json
 
 import pytz
+from time import mktime
 from django.views.generic import TemplateView
 from django.http import JsonResponse
 from reports.accidents.models import *
@@ -98,15 +99,18 @@ class UpdateAPI(APIView):
             except (ValueError, NACity.DoesNotExist):
                 return self.error('Invalid city ID')
 
-        if 'start_datetime' in json_request:
-            dt= datetime.strptime(json_request['start_datetime'], '%Y-%m-%dT%H:%M:%S%fZ')
-            accident.start_datetime = dt.replace(tzinfo=pytz.UTC)
-            save_accident = True
+        try:
+            if 'start_datetime' in json_request:
+                dt = datetime.fromtimestamp(float(json_request['start_datetime']))
+                accident.start_datetime = dt.replace(tzinfo=pytz.UTC)
+                save_accident = True
 
-        if 'finish_datetime' in json_request:
-            dt = datetime.strptime(json_request['finish_datetime'], '%Y-%m-%dT%H:%M:%S%fZ')
-            accident.finish_datetime = dt.replace(tzinfo=pytz.UTC)
-            save_accident = True
+            if 'finish_datetime' in json_request:
+                dt = datetime.fromtimestamp(float(json_request['finish_datetime']))
+                accident.finish_datetime = dt.replace(tzinfo=pytz.UTC)
+                save_accident = True
+        except ValueError:
+            return self.error("Invalid timestamp")
 
         if 'category' in json_request:
             try:
@@ -184,8 +188,9 @@ class UpdateAPI(APIView):
                 'company_names': [c.name for c in accident.companies.all()],
                 'city_ids': [c.id for c in accident.cities.all()],
                 'city_name': [c.name for c in accident.cities.all()],
-                'start_datetime': accident.start_datetime,
-                'finish_datetime': accident.finish_datetime,
+                'start_datetime': mktime(accident.start_datetime.utctimetuple()) if accident.start_datetime else None,
+                'finish_datetime': mktime(
+                    accident.finish_datetime.utctimetuple()) if accident.finish_datetime else None,
                 'category_id': accident.category.id if accident.category else None,
                 'category_title': accident.category.title if accident.category else None,
                 'kind_id': accident.kind.id if accident.kind else None,
