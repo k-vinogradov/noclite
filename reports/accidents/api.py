@@ -1,5 +1,6 @@
 import json
 
+import pytz
 from django.views.generic import TemplateView
 from django.http import JsonResponse
 from reports.accidents.models import *
@@ -70,7 +71,7 @@ class UpdateAPI(APIView):
                 return self.error('Accident ID "{}" doesn\'t exist'.format(id))
             action = 'UPDATE'
         else:
-            accident = NAAccident(locations=u'', reason=u'', actions=u'', iss_id=u'')
+            accident = NAAccident(locations=u'', reason=u'', actions=u'')
             accident.save()
             action = 'CREATE'
         save_accident = False
@@ -98,11 +99,13 @@ class UpdateAPI(APIView):
                 return self.error('Invalid city ID')
 
         if 'start_datetime' in json_request:
-            accident.start_datetime = datetime.strptime(json_request['start_datetime'])
+            dt= datetime.strptime(json_request['start_datetime'], '%Y-%m-%dT%H:%M:%S%fZ')
+            accident.start_datetime = dt.replace(tzinfo=pytz.UTC)
             save_accident = True
 
         if 'finish_datetime' in json_request:
-            accident.finish_datetime = datetime.strptime(json_request['finish_datetime'])
+            dt = datetime.strptime(json_request['finish_datetime'], '%Y-%m-%dT%H:%M:%S%fZ')
+            accident.finish_datetime = dt.replace(tzinfo=pytz.UTC)
             save_accident = True
 
         if 'category' in json_request:
