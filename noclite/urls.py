@@ -104,9 +104,11 @@ urlpatterns = patterns(
         name='reports.accidents.cg'),
 
     # API
-    url(r'api/reports/accidents/references/$', csrf_exempt(accidents_api.GetReferencesAPI.as_view()),
+    url(r'api/reports/accidents/references/$', csrf_exempt(accidents_api.APIGetReferences.as_view()),
         name='api.reports.accidents.references'),
-    url(r'api/reports/accidents/update/$', csrf_exempt(accidents_api.UpdateAPI.as_view()),
+    url(r'api/reports/accidents/update/$', csrf_exempt(accidents_api.APIUpdate.as_view()),
         name='api.reports.accidents.update'),
+    url(r'api/reports/accidents/delete/$', csrf_exempt(accidents_api.APIDelete.as_view()),
+        name='api.reports.accidents.delete'),
 
 )

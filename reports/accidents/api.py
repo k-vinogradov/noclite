@@ -19,6 +19,9 @@ class JSONResponseMixin(object):
 
 
 class APIView(JSONResponseMixin, TemplateView):
+    def error(self, message):
+        return dict(api_method=self.__class__.__name__, api_status='ERROR', api_message=message)
+
     def render_to_response(self, context, **response_kwargs):
         if self.request.method == 'GET':
             return self.http_method_not_allowed(self.request)
@@ -29,7 +32,56 @@ class APIView(JSONResponseMixin, TemplateView):
         return self.render_to_response(context)
 
 
-class GetReferencesAPI(APIView):
+class APIDelete(APIView):
+    def get_context_data(self, **kwargs):
+        body = self.request.body
+        try:
+            json_request = json.loads(body)
+        except ValueError:
+            return self.error('Invalid JSON-request syntax')
+        if 'id' in json_request:
+            try:
+                id = int(json_request['id'])
+                accident = NAAccident.objects.get(id=id)
+                action = 'DELETE'
+                accident_dict = {
+                    'id': accident.id,
+                    'company_ids': [c.id for c in accident.companies.all()],
+                    'company_names': [c.name for c in accident.companies.all()],
+                    'city_ids': [c.id for c in accident.cities.all()],
+                    'city_name': [c.name for c in accident.cities.all()],
+                    'start_datetime': mktime(
+                        accident.start_datetime.utctimetuple()) if accident.start_datetime else None,
+                    'finish_datetime': mktime(
+                        accident.finish_datetime.utctimetuple()) if accident.finish_datetime else None,
+                    'category_id': accident.category.id if accident.category else None,
+                    'category_title': accident.category.title if accident.category else None,
+                    'kind_id': accident.kind.id if accident.kind else None,
+                    'kind_title': accident.kind.title if accident.kind else None,
+                    'locations': accident.locations,
+                    'affected_customers': accident.affected_customers,
+                    'magistral_customers_affected': accident.magistral_customers_affected,
+                    'reason': accident.reason,
+                    'actions': accident.actions,
+                    'iss_id': accident.iss_id,
+                    'consolidation_report_ignore_cause': accident.consolidation_report_ignore_cause
+                }
+                accident.delete()
+                return {
+                    'api_method': self.__class__.__name__,
+                    'api_status': 'OK',
+                    'api_response': accident_dict,
+                    'api_action': action}
+            except ValueError:
+                return self.error('Invalid accident id "{}"'.format(json_request['id']))
+            except NAAccident.DoesNotExist:
+                return self.error('Accident ID "{}" doesn\'t exist'.format(json_request['id']))
+        else:
+            return self.error('Invalid request')
+
+
+
+class APIGetReferences(APIView):
     def get_context_data(self, **kwargs):
         context = {
             'api_method': self.__class__.__name__,
@@ -50,10 +102,7 @@ class GetReferencesAPI(APIView):
         return context
 
 
-class UpdateAPI(APIView):
-    def error(self, message):
-        return dict(api_method=self.__class__.__name__, api_status='ERROR', api_message=message)
-
+class APIUpdate(APIView):
     def get_context_data(self, **kwargs):
         body = self.request.body
 
