@@ -150,12 +150,12 @@ class APIUpdate(APIView):
 
         try:
             if 'start_datetime' in json_request:
-                dt = datetime.fromtimestamp(float(json_request['start_datetime']))
+                dt = datetime.utcfromtimestamp(float(json_request['start_datetime']))
                 accident.start_datetime = dt.replace(tzinfo=pytz.UTC)
                 save_accident = True
 
             if 'finish_datetime' in json_request:
-                dt = datetime.fromtimestamp(float(json_request['finish_datetime']))
+                dt = datetime.utcfromtimestamp(float(json_request['finish_datetime']))
                 accident.finish_datetime = dt.replace(tzinfo=pytz.UTC)
                 save_accident = True
         except ValueError:
