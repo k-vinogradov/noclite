@@ -74,19 +74,36 @@ class ActiveAble(models.Model):
 
 
 class JournalMixin(object):
-    def write_to_journal(self, user, message, level=JL_INFO):
+    def write_to_journal(self, message, user=None, level=JL_INFO):
         from www.models import Journal
+        if user:
+            object_list = [self, user]
+        else:
+            object_list = [self]
 
-        Journal.objects.create(level=JL_INFO, message=message, objects=[self, user])
+        Journal.objects.create(level=JL_INFO, message=message, objects=object_list)
 
-    def journal_changes(self, user, p_instance=None):
+    def journal_changes(self, user=None, p_instance=None, api_request_id=None):
+        """
+        :type self: models.Model
+        :param user:
+        :type user: django.contrib.auth.models.User
+        :param p_instance:
+        :type p_instance: models.Model
+        :param api_request_id:
+        """
         model_class = self.__class__
         meta = model_class._meta
         if p_instance:
-            message = u'User {full_name} ({email}) updated {verbose_name}.'.format(
-                full_name=' '.join((user.first_name, user.last_name)),
-                email=user.email,
-                verbose_name=meta.verbose_name)
+            if user:
+                message = u'User {full_name} ({email}) updated {verbose_name}.'.format(
+                    full_name=' '.join((user.first_name, user.last_name)),
+                    email=user.email,
+                    verbose_name=meta.verbose_name)
+            else:
+                message = u"{verbose_name} update by API request {req_id}".format(
+                    verbose_name=meta.verbose_name.upper(),
+                    req_id=api_request_id)
             for field in meta.fields:
                 value = getattr(self, field.name)
                 p_value = getattr(p_instance, field.name)
@@ -118,10 +135,15 @@ class JournalMixin(object):
                     if len(added) > 0:
                         message += u'\n{0} (removed): {1}'.format(verbose_name, u','.join(removed))
         else:
-            message = u'User {full_name} ({email}) added new {verbose_name}.'.format(
-                full_name=' '.join((user.first_name, user.last_name)),
-                email=user.email,
-                verbose_name=meta.verbose_name)
+            if user:
+                message = u'User {full_name} ({email}) added new {verbose_name}.'.format(
+                    full_name=' '.join((user.first_name, user.last_name)),
+                    email=user.email,
+                    verbose_name=meta.verbose_name)
+            else:
+                message = u'New {verbose_name} created by API request ID {req_id}'.format(
+                    verbose_name=meta.verbose_name.upper(),
+                    req_id=api_request_id)
             for field in meta.fields:
                 if getattr(self, field.name):
                     verbose_name = field._verbose_name
@@ -132,7 +154,7 @@ class JournalMixin(object):
                     verbose_name = field._verbose_name
                     value = ', '.join([unicode(v) for v in getattr(self, field.name).all()])
                     message += u'\n{0}: {1}'.format(verbose_name, value)
-        self.write_to_journal(user, message)
+        self.write_to_journal(message, user)
 
 
 class JournalViewMixin(object):

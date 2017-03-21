@@ -1,4 +1,5 @@
 import json
+import uuid
 
 import pytz
 from time import mktime
@@ -105,6 +106,7 @@ class APIGetReferences(APIView):
 class APIUpdate(APIView):
     def get_context_data(self, **kwargs):
         body = self.request.body
+        request_id = uuid.uuid1();
 
         try:
             json_request = json.loads(body)
@@ -123,8 +125,10 @@ class APIUpdate(APIView):
         else:
             accident = NAAccident(locations=u'', reason=u'', actions=u'')
             accident.save()
+            accident.journal_changes(api_request_id=request_id)
             action = 'CREATE'
         save_accident = False
+
 
         if 'companies' in json_request:
             try:
