@@ -112,6 +112,7 @@ class NAAccident(models.Model, JournalMixin):
     consolidation_report_ignore_cause = models.TextField(blank=True, default=u'',
                                                          verbose_name=u'Cause of ignoring accident in the consolidation'
                                                                       u' report')
+    gamma_external_id = models.IntegerField(blank=True, null=True, verbose_name=u'Gamma ID', editable=False)
 
     class Meta:
         ordering = ['start_datetime', 'finish_datetime', ]

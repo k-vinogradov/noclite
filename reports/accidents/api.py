@@ -81,7 +81,6 @@ class APIDelete(APIView):
             return self.error('Invalid request')
 
 
-
 class APIGetReferences(APIView):
     def get_context_data(self, **kwargs):
         context = {
@@ -113,6 +112,13 @@ class APIUpdate(APIView):
         except ValueError:
             return self.error('Invalid JSON-request syntax')
 
+        if 'gamma_id' not in json_request:
+            return self.error('No GAMMA ID fieled in the request')
+
+        external_id_exists = NAAccident.objects.filter(gamma_external_id=int(json_request('gamma_id'))).exists()
+        if external_id_exists and 'id' not in json_request:
+            return self.error('Failed to create a new accident for existing external ID')
+
         if 'id' in json_request:
             try:
                 id = int(json_request['id'])
@@ -123,12 +129,15 @@ class APIUpdate(APIView):
                 return self.error('Accident ID "{}" doesn\'t exist'.format(id))
             action = 'UPDATE'
         else:
-            accident = NAAccident(locations=u'', reason=u'', actions=u'')
+            accident = NAAccident(
+                locations=u'',
+                reason=u'',
+                actions=u'',
+                gamma_external_id=json_request['gamma_id'])
             accident.save()
             accident.journal_changes(api_request_id=request_id)
             action = 'CREATE'
         save_accident = False
-
 
         if 'companies' in json_request:
             try:
