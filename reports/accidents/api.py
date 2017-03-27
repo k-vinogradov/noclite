@@ -237,6 +237,13 @@ class APIUpdate(APIView):
             except ValueError:
                 return self.error('Invalid consolidation_report_ignore_cause text')
 
+        if 'gamma_id' in json_request:
+            try:
+                accident.gamma_external_id = int(json_request['gamma_id'])
+                save_accident = True
+            except ValueError:
+                return self.error('Invalid GAMMA ID integer value')
+
         if save_accident:
             accident.save()
         else:
