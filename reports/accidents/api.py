@@ -115,7 +115,7 @@ class APIUpdate(APIView):
         if 'gamma_id' not in json_request:
             return self.error('No GAMMA ID fieled in the request')
 
-        external_id_exists = NAAccident.objects.filter(gamma_external_id=int(json_request('gamma_id'))).exists()
+        external_id_exists = NAAccident.objects.filter(gamma_external_id=int(json_request['gamma_id'])).exists()
         if external_id_exists and 'id' not in json_request:
             return self.error('Failed to create a new accident for existing external ID')
 
