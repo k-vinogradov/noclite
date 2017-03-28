@@ -103,6 +103,30 @@ class APIGetReferences(APIView):
 
 
 class APIUpdate(APIView):
+
+    def get_accident_dict(self, accident):
+        return {
+                'id': accident.id,
+                'company_ids': [c.id for c in accident.companies.all()],
+                'company_names': [c.name for c in accident.companies.all()],
+                'city_ids': [c.id for c in accident.cities.all()],
+                'city_name': [c.name for c in accident.cities.all()],
+                'start_datetime': mktime(accident.start_datetime.utctimetuple()) if accident.start_datetime else None,
+                'finish_datetime': mktime(
+                    accident.finish_datetime.utctimetuple()) if accident.finish_datetime else None,
+                'category_id': accident.category.id if accident.category else None,
+                'category_title': accident.category.title if accident.category else None,
+                'kind_id': accident.kind.id if accident.kind else None,
+                'kind_title': accident.kind.title if accident.kind else None,
+                'locations': accident.locations,
+                'affected_customers': accident.affected_customers,
+                'magistral_customers_affected': accident.magistral_customers_affected,
+                'reason': accident.reason,
+                'actions': accident.actions,
+                'iss_id': accident.iss_id,
+                'consolidation_report_ignore_cause': accident.consolidation_report_ignore_cause
+            }
+
     def get_context_data(self, **kwargs):
         body = self.request.body
         request_id = uuid.uuid1();
@@ -117,7 +141,11 @@ class APIUpdate(APIView):
 
         external_id_exists = NAAccident.objects.filter(gamma_external_id=int(json_request['gamma_id'])).exists()
         if external_id_exists and 'id' not in json_request:
-            return self.error('Failed to create a new accident for existing external ID')
+            return {
+                'api_method': self.__class__.__name__,
+                'api_status': 'OK',
+                'api_response': self.get_accident_dict(NAAccident.objects.get(gamma_external_id=int(json_request['gamma_id']))),
+                'api_action': None}
 
         if 'id' in json_request:
             try:
@@ -251,31 +279,10 @@ class APIUpdate(APIView):
                 accident.delete()
             action = 'LIST'
         if accident.id:
-            accident_dict = {
-                'id': accident.id,
-                'company_ids': [c.id for c in accident.companies.all()],
-                'company_names': [c.name for c in accident.companies.all()],
-                'city_ids': [c.id for c in accident.cities.all()],
-                'city_name': [c.name for c in accident.cities.all()],
-                'start_datetime': mktime(accident.start_datetime.utctimetuple()) if accident.start_datetime else None,
-                'finish_datetime': mktime(
-                    accident.finish_datetime.utctimetuple()) if accident.finish_datetime else None,
-                'category_id': accident.category.id if accident.category else None,
-                'category_title': accident.category.title if accident.category else None,
-                'kind_id': accident.kind.id if accident.kind else None,
-                'kind_title': accident.kind.title if accident.kind else None,
-                'locations': accident.locations,
-                'affected_customers': accident.affected_customers,
-                'magistral_customers_affected': accident.magistral_customers_affected,
-                'reason': accident.reason,
-                'actions': accident.actions,
-                'iss_id': accident.iss_id,
-                'consolidation_report_ignore_cause': accident.consolidation_report_ignore_cause
-            }
             return {
                 'api_method': self.__class__.__name__,
                 'api_status': 'OK',
-                'api_response': accident_dict,
+                'api_response': self.get_accident_dict(accident),
                 'api_action': action}
         else:
             return self.error('Invalid API request')
